@@ -15,6 +15,21 @@ data Keywords = Keywords {alphaNumeric :: [String] -- alpha-numeric keywords
                         , symbols :: [String] -- keywords with symbols (non-alpha-numeric) characters
                         , commentL :: Char
                         , commentR :: Char}
+data KeyWordType = CommentL
+                 | Alpha
+                 | Number
+                 | Symbol
+                 | NonGraphical
+
+-- @whichKeyword keywords char@ returns what type of keyword can begin with @char@
+whichKeyword :: Keywords -> Char -> KeyWordType
+whichKeyword keywords char =
+  if (char == commentL keywords) then CommentL
+  else if (isAlpha char) then Alpha
+  else if (isDigit char || char == '-') then Number -- @char@ indicates the beginning of a number
+  else if (isSymbolic char) then Symbol
+  else if (not $ isGraphical char) then NonGraphical -- @char@ is whitespace or other irrelevant chararacter
+  else error ("Lexer.whichKeyword : Could not lex character " ++ [char])
 
 iotaKeywords :: Keywords
 iotaKeywords = Keywords {alphaNumeric, symbols, commentL, commentR}
@@ -93,7 +108,6 @@ scan keywords = scanHelp []
                                   else -- no clue what @sHead@ is!
                                     error ("Lexer.scan: Could not lex character " ++ [sHead]) in
           scanHelp newToks newS
-    isGraphical s = isPrint s && (not $ isSpace s)
 
 iotaScan :: String -> [Token]
 iotaScan = scan iotaKeywords
@@ -103,3 +117,6 @@ iotaScan = scan iotaKeywords
 ------------
 isSymbolic :: Char -> Bool
 isSymbolic s = isSymbol s || isPunctuation s
+
+isGraphical :: Char -> Bool
+isGraphical s = isPrint s && (not $ isSpace s)
