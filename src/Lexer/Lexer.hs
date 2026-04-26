@@ -16,14 +16,14 @@ data Keywords = Keywords {alphaNumeric :: [String] -- alpha-numeric keywords
                         , symbols :: [String] -- keywords with symbols (non-alpha-numeric) characters
                         , commentL :: Char
                         , commentR :: Char}
-data KeyWordType = CommentL
+data KeywordType = CommentL
                  | Alpha
                  | Number
                  | Symbol
                  | NonGraphical
 
 -- @whichKeyword keywords char@ returns what type of keyword can begin with @char@
-whichKeyword :: Keywords -> Char -> KeyWordType
+whichKeyword :: Keywords -> Char -> KeywordType
 whichKeyword keywords char =
   if (char == commentL keywords) then CommentL
   else if (isAlpha char) then Alpha
