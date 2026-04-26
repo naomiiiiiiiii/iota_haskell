@@ -4,7 +4,8 @@
 module Lexer.Lexer (iotaScan)
 where
 
-import Data.Char (isAlpha, isAlphaNum, isPunctuation, isSymbol)
+import Data.Char (isAlpha, isAlphaNum, isDigit, isPunctuation, isSymbol, isPrint, isSpace)
+import Data.List (uncons)
 import Text.Read (readMaybe)
 
 ------------
@@ -56,6 +57,46 @@ scanSymbol keyWs front back = do
                  then (Key(front), back)
                  else scanSymbol keyWs (front ++ [hd]) remBack
 -- Line 47 is slow because of the singleton append. IDEA: build up front backwards, then reverse once at the end? Then I would have to reverse all members of @Keywords.symbols@ too for the comparison, so is it really faster?
+
+-- @scan keywords str@ will lex @str@ into a list of @Tokens@, using the keywords described in @keywords@. It does this by casing on whether @str@ is a comment, an alphanumeric character, a number, or a symbol.
+-- In ML, @val scan: string -> token list@ because @Keywords@ is quantified at the
+-- module level. All lexer functions should depend on the SAME @Keywords@
+scan :: Keywords -> String -> [Token]
+scan keywords = scanHelp []
+  where
+    scanHelp :: [Token] -> String -> [Token]
+    scanHelp toks s = case (uncons s) of
+      Nothing -> reverse toks -- We have successfully lexed @s@
+      Just (sHead, sTail) -> -- Start by examining the first character of @s@
+        let (newToks, newS) = -- START HERE Helper function (whichKeyword sHead) to avoid the nested @if@ statements
+              if (sHead == commentL keywords) -- We are lexing a comment
+              then
+                let commentRemoved = dropWhile (/= (commentR keywords)) sTail in
+                -- Line above: drop the comment from the string we are lexing
+                  (toks, dropWhile (== (commentR keywords)) commentRemoved)
+                -- Line above: drop the comment terminator from the string we are lexing
+              else if (isAlpha sHead) -- We are lexing an alpha-numeric identifier or alphabetical keyword
+                   then
+                     let (alphas, remS) = span isAlphaNum s in
+                       ((alphaTok keywords alphas):toks, remS)
+                   else if (isDigit sHead || sHead == '-') -- the front of @s@ is a number
+                        then
+                          let (num, remSTail) = span isDigit sTail in -- gather all digits from the front of @s@, excluding the possible minus
+                            (intTok(sHead:num):toks, remSTail) -- add the @-@ back, pass to @intTok@
+                        else if (isSymbolic sHead)
+                             then
+                               let (tok, remS) = scanSymbol keywords [sHead] sTail in
+                                 (tok:toks, remS)
+                             else if (not $ isGraphical sHead) -- @sHead@ is whitespace or other irrelevant char
+                                  then
+                                    (toks, dropWhile (not . isGraphical) s) -- remove all irrelevant chars
+                                  else -- no clue what @sHead@ is!
+                                    error ("Lexer.scan: Could not lex character " ++ [sHead]) in
+          scanHelp newToks newS
+    isGraphical s = isPrint s && (not $ isSpace s)
+
+iotaScan :: String -> [Token]
+iotaScan = scan iotaKeywords
 
 ------------
 --- Lexer helpers
