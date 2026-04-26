@@ -1,6 +1,7 @@
 {-# LANGUAGE NamedFieldPuns#-}
 
--- A generic lexer implemented as described in *ML for the Working Programmer*/
+-- A generic lexer implemented as described in *ML for the Working Programmer*/ (@scan@)
+-- Also an instantiation of the generic lexer to iota (@iotaScan@)
 module Lexer.Lexer (iotaScan)
 where
 
