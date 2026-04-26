@@ -4,6 +4,8 @@
 module Lexer.Lexer (iotaScan)
 where
 
+import Data.Char (isAlpha, isAlphaNum)
+import Text.Read (readMaybe)
 
 ------------
 --- Keywords
@@ -29,3 +31,16 @@ data Token = Id String -- Identifiers
            | Int Int -- Numbers
   deriving(Show, Eq)
 
+-- @alphaTok@ takes a @Keywords@ value describing the keywords of the lexed language
+-- and a @String@ of alphanumeric characters
+-- @alphaTok@ scans the string into a keyword or an identity, depending on the @Keywords@
+alphaTok :: Keywords -> String -> Token
+alphaTok keywords str = if (all isAlphaNum str)
+                        then if (elem str $ alphaNumeric keywords) then Key str else Id str
+                        else error ("Lexer.alphaTok: Expected alphanumeric string, got " ++ str)
+
+-- Lex an integer
+intTok :: String -> Token
+intTok str = (maybe
+              (error $ "Lexer.intTok: Expected numeric string, got " ++ str)
+              Int) . readMaybe $ str
