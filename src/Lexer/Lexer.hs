@@ -20,3 +20,12 @@ iotaKeywords = Keywords {alphaNumeric, symbols, commentL, commentR}
         commentL = '{' -- TODO, would be nice to have a multi-character comment intro like /* comment */
         commentR = '}'
 
+------------
+--- Lexer
+------------
+
+data Token = Id String -- Identifiers
+           | Key String -- Keywords
+           | Int Int -- Numbers
+  deriving(Show, Eq)
+
