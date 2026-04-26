@@ -83,30 +83,24 @@ scan keywords = scanHelp []
     scanHelp toks s = case (uncons s) of
       Nothing -> reverse toks -- We have successfully lexed @s@
       Just (sHead, sTail) -> -- Start by examining the first character of @s@
-        let (newToks, newS) = -- START HERE Helper function (whichKeyword sHead) to avoid the nested @if@ statements
-              if (sHead == commentL keywords) -- We are lexing a comment
-              then
-                let commentRemoved = dropWhile (/= (commentR keywords)) sTail in
-                -- Line above: drop the comment from the string we are lexing
-                  (toks, dropWhile (== (commentR keywords)) commentRemoved)
+        let (newToks, newS) =
+              -- Case on what type of keyword begins with @sHead@
+              case (whichKeyword keywords sHead) of
+                CommentL ->
+                  let commentRemoved = dropWhile (/= (commentR keywords)) sTail in
+                  -- Line above: drop the comment from the string we are lexing
+                    (toks, dropWhile (== (commentR keywords)) commentRemoved)
                 -- Line above: drop the comment terminator from the string we are lexing
-              else if (isAlpha sHead) -- We are lexing an alpha-numeric identifier or alphabetical keyword
-                   then
-                     let (alphas, remS) = span isAlphaNum s in
-                       ((alphaTok keywords alphas):toks, remS)
-                   else if (isDigit sHead || sHead == '-') -- the front of @s@ is a number
-                        then
-                          let (num, remSTail) = span isDigit sTail in -- gather all digits from the front of @s@, excluding the possible minus
-                            (intTok(sHead:num):toks, remSTail) -- add the @-@ back, pass to @intTok@
-                        else if (isSymbolic sHead)
-                             then
-                               let (tok, remS) = scanSymbol keywords [sHead] sTail in
-                                 (tok:toks, remS)
-                             else if (not $ isGraphical sHead) -- @sHead@ is whitespace or other irrelevant char
-                                  then
-                                    (toks, dropWhile (not . isGraphical) s) -- remove all irrelevant chars
-                                  else -- no clue what @sHead@ is!
-                                    error ("Lexer.scan: Could not lex character " ++ [sHead]) in
+                -- Case below: we are lexing an alpha-numeric identifier or alphabetical keyword
+                Alpha -> let (alphas, remS) = span isAlphaNum s in
+                           ((alphaTok keywords alphas):toks, remS)
+                Number -> let (num, remSTail) = span isDigit sTail in -- gather all digits from the front of @s@, excluding @sHead@, which could be a minus-sign
+                            (intTok(sHead:num):toks, remSTail) -- add @sHead@ back, pass to @intTok@
+                Symbol -> let (tok, remS) = scanSymbol keywords [sHead] sTail in
+                            (tok:toks, remS)
+                -- @sHead@ is whitespace or other irrelevant char
+                NonGraphical -> (toks, dropWhile (not . isGraphical) s) -- remove all irrelevant chars
+        in
           scanHelp newToks newS
 
 iotaScan :: String -> [Token]
