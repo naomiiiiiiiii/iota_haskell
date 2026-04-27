@@ -34,8 +34,13 @@ ident toks = case toks of
           (Lex.Id s):remToks -> Right (s, remToks)
           _ -> Left $ SyntaxError ("ident: expected identifier Lex.Token, got " ++ (show toks))
 
+-- If @toks@ begins with @Key k@, @key toks@ parses the keyword @k@
+-- Raises syntax error otherwise
 key :: String -> [Lex.Token] -> Either SyntaxError (String, [Lex.Token])
-key k toks = error "TODO"
+key k toks = case toks of
+               (Lex.Key k0 : remToks) | (k == k0) -> Right (k, remToks)
+               _ -> Left $ SyntaxError ("key: expected keyword" ++ k ++
+                                         ", got" ++ (show toks))
 
 natp :: [Lex.Token] -> Either SyntaxError (Int, [Lex.Token])
 natp toks = error "TODO"
