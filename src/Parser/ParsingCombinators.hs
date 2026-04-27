@@ -1,7 +1,7 @@
 --Some generic parsing combinators as described in *ML for the Working Programmer*/
 -- If a parsing combinator @p@ is built to parse @Lex.Token@s into values of type @A@, @p:: [Lex.Token] -> Either SyntaxError (A, [Lex.Token])@. If the parsing combinator fails to parse an @a@, it will produce a syntax error. If it succeeds, it will produce a tuple. The first value in the tuple is the result of the parsing. The second value is the remaining, yet unparsed Lex.Tokens.
 
-module Parser.ParsingCombinators (ident, key, intP, starp, epsilon, (|:|), force, circ, keycircr, keycircl, (>>>), repeat, parse)
+module Parser.ParsingCombinators (ident, key, intP, unitP, epsilon, (|:|), force, circ, keycircr, keycircl, (>>>), repeat, parse)
   where
 
 import qualified Lexer.Lexer as Lex
@@ -46,8 +46,10 @@ intP toks = case toks of
               (Lex.Int i):remToks -> Right (i, remToks)
               _  -> Left $ SyntaxError ("intP: expected int, got " ++ (show toks))
 
-starp :: [Lex.Token] -> ((), [Lex.Token])
-starp toks = error "TODO"
+unitP :: [Lex.Token] -> Either SyntaxError ((), [Lex.Token])
+unitP toks = case toks of
+              (Lex.Key "("):(Lex.Key ")"):remToks -> Right ((), remToks)
+              _  -> Left $ SyntaxError ("unitP: expected (), got " ++ (show toks))
 
 epsilon :: [Lex.Token] -> ([a], [Lex.Token])
 epsilon toks = error "TODO"
