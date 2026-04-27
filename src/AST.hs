@@ -6,19 +6,19 @@ where
 data Typ = IntTyp
          | UnitTyp
          | ArrowTyp (Typ, Typ) -- function
-         | RefTyp Typ -- reference
-         | CompTyp Typ -- suspended stateful computation, written ○
+         | RefTyp Typ -- reference, written "Ref([Typ])"
+         | CompTyp Typ -- suspended stateful computation, written "Comp([Typ])"
 
 data Exp = Free String
          | Bound Int
-         | Star -- @Star@ is the only value of type @Unit@
+         | Star -- @Star@ is the only value of type @Unit@, written "()"
          | Int Int
          | Loc Int -- location into the store. This is an internal expression, not accessible to the user.
-         | Plus (Exp, Exp)
-         | Lam ((String, Typ),  Exp)
-         | Ap (Exp, Exp)
-         | Ret Exp
-         | Bind (Exp, (String, Exp))
-         | Ref Exp
-         | Asgn (Exp, Exp)
-         | Deref Exp
+         | Plus (Exp, Exp) -- Addition on integer expressions, written "x + y"
+         | Lam ((String, Typ),  Exp) -- lambdas are written "\(x : Int).x", for example
+         | Ap (Exp, Exp) -- function application is written "f x y" or "f(x y)"
+         | Ret Exp -- return into the state monad, written "ret [Exp]"
+         | Bind (Exp, (String, Exp)) -- bind operation for the state monad, written "bind([Exp], \[Name].[Exp])"
+         | Ref Exp -- a reference to an expression, written "ref [Exp]"
+         | Asgn (Exp, Exp) -- assign to a reference, written "[Exp] := [Exp]"
+         | Deref Exp -- dereference a reference, written "![Exp]"
