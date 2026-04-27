@@ -1,7 +1,7 @@
 --Some generic parsing combinators as described in *ML for the Working Programmer*/
 -- If a parsing combinator @p@ is built to parse @Lex.Token@s into values of type @A@, @p:: [Lex.Token] -> Either SyntaxError (A, [Lex.Token])@. If the parsing combinator fails to parse an @a@, it will produce a syntax error. If it succeeds, it will produce a tuple. The first value in the tuple is the result of the parsing. The second value is the remaining, yet unparsed Lex.Tokens.
 
-module Parser.ParsingCombinators (ident, key, intP, unitP, epsilon, (|:|), force, circ, keycircr, keycircl, (>>>), repeat, parse)
+module Parser.ParsingCombinators (ident, key, intP, unitP, epsilon, (|:|), force, circ, keyCircR, keyCircL, (>>>), repeat, parse)
   where
 
 import qualified Lexer.Lexer as Lex
@@ -83,20 +83,20 @@ circ p2 p1 toks = do
   return ((resA, resB), remToks)
 
 -- For parsing combinator @p@ and string @k@,
--- @keycircr p k toks@ first parses the keyword k from @toks@. Then, it applies @p@ to the remaining tokens and returns the result.
--- @keycircr p k@ is equivalent to @circ p (key k)@, but it discards the result of @(key k)@
--- It's called @keycircr@ because @p@ is applied to the rightmost part of @toks, after the keyword is removed.
-keycircr :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> String ->
+-- @keyCircR p k toks@ first parses the keyword k from @toks@. Then, it applies @p@ to the remaining tokens and returns the result.
+-- @keyCircR p k@ is equivalent to @circ p (key k)@, but it discards the result of @(key k)@
+-- It's called @keyCircR@ because @p@ is applied to the rightmost part of @toks, after the keyword is removed.
+keyCircR :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> String ->
             [Lex.Token] -> Either SyntaxError (a, [Lex.Token])
-keycircr p k= (circ p (key k)) >>> snd
+keyCircR p k= (circ p (key k)) >>> snd
 
 -- For parsing combinator @p@ and string @k@,
--- @keycircl k p toks@ first applies @p@ to @toks@ with result @(res, midToks)@. It then parses the keyword k from @midToks@, to get @(_, remToks)@. Finally, it returns @(res, remToks)@
--- @keycircl p k@ is equivalent to @circ (key k) p@, but it discards the result of @(key k)@
--- It's called @keycircl@ because @p@ is applied to the leftmost part of @toks, before the keyword is removed.
-keycircl :: String -> ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) ->
+-- @keyCircL k p toks@ first applies @p@ to @toks@ with result @(res, midToks)@. It then parses the keyword k from @midToks@, to get @(_, remToks)@. Finally, it returns @(res, remToks)@
+-- @keyCircL p k@ is equivalent to @circ (key k) p@, but it discards the result of @(key k)@
+-- It's called @keyCircL@ because @p@ is applied to the leftmost part of @toks, before the keyword is removed.
+keyCircL :: String -> ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) ->
             [Lex.Token] -> Either SyntaxError (a, [Lex.Token])
-keycircl k p= (circ (key k) p) >>> fst
+keyCircL k p= (circ (key k) p) >>> fst
 
 (>>>) :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> (a -> b) ->
          [Lex.Token] -> Either SyntaxError (b, [Lex.Token])
