@@ -38,9 +38,8 @@ ident toks = case toks of
 -- Raises syntax error otherwise
 key :: String -> [Lex.Token] -> Either SyntaxError (String, [Lex.Token])
 key k toks = case toks of
-               (Lex.Key k0 : remToks) | (k == k0) -> Right (k, remToks)
-               _ -> Left $ SyntaxError ("key: expected keyword" ++ k ++
-                                         ", got" ++ (show toks))
+               (Lex.Key k0):remToks | (k == k0) -> Right (k, remToks)
+               _ -> Left $ SyntaxError ("key: expected keyword" ++ k ++ ", got " ++ (show toks))
 
 intP :: [Lex.Token] -> Either SyntaxError (Int, [Lex.Token])
 intP toks = case toks of
@@ -74,6 +73,6 @@ keycircl = error "TODO"
 -- Top-level parsing function. Given a parsing combinator @p@ and a string to parse @s@, @parse@ will first lex @s@ (according to the provided @Lex.Keywords@), then apply @p@ to the lexed result.
 parse :: Lex.Keywords -> ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> String -> a
 parse keyWs p s = case p $ Lex.scan keyWs s of
-                    Right (e, []) -> e -- Succesfully parsed all of @s@
-                    Right(e, _r:_) -> pcError ("parse: Extra chars in phrase: " ++ s)
+                    Right (out, []) -> out -- Succesfully parsed all of @s@
+                    Right(_, _r:_) -> pcError ("parse: Extra chars in phrase: " ++ s)
                     Left (SyntaxError msg) -> pcError msg -- SyntaxError was raised and not handled, so now the parser needs to fail.
