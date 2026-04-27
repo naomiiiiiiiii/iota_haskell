@@ -1,7 +1,7 @@
 --Some generic parsing combinators as described in *ML for the Working Programmer*/
 -- If a parsing combinator @p@ is built to parse @Lex.Token@s into values of type @A@, @p:: [Lex.Token] -> Either SyntaxError (A, [Lex.Token])@. If the parsing combinator fails to parse an @a@, it will produce a syntax error. If it succeeds, it will produce a tuple. The first value in the tuple is the result of the parsing. The second value is the remaining, yet unparsed Lex.Tokens.
 
-module Parser.ParsingCombinators (parse)
+module Parser.ParsingCombinators (ident, parse)
   where
 
 import qualified Lexer.Lexer as Lex
@@ -22,6 +22,12 @@ forceError (SyntaxError msg) = error msg
 ------------
 --- Parsing combinators
 ------------
+
+-- Parse an identifier
+ident :: [Lex.Token] -> Either SyntaxError (String, [Lex.Token])
+ident toks = case toks of
+          (Lex.Id s):remToks -> Right (s, remToks)
+          _ -> Left $ SyntaxError ("expected identifier Lex.Token, got " ++ (show toks))
 
 -- Top-level parsing function. Given a parsing combinator @p@ and a string to parse @s@, @parse@ will first lex @s@ (according to the provided @Lex.Keywords@), then apply @p@ to the lexed result.
 parse :: Lex.Keywords -> ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> String -> a
