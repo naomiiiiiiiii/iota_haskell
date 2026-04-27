@@ -88,7 +88,7 @@ circ p2 p1 toks = do
 -- It's called @keyCircR@ because @p@ is applied to the rightmost part of @toks, after the keyword is removed.
 keyCircR :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> String ->
             [Lex.Token] -> Either SyntaxError (a, [Lex.Token])
-keyCircR p k= (circ p (key k)) >>> snd
+keyCircR p k = (circ p (key k)) >>> snd
 
 -- For parsing combinator @p@ and string @k@,
 -- @keyCircL k p toks@ first applies @p@ to @toks@ with result @(res, midToks)@. It then parses the keyword k from @midToks@, to get @(_, remToks)@. Finally, it returns @(res, remToks)@
@@ -96,7 +96,7 @@ keyCircR p k= (circ p (key k)) >>> snd
 -- It's called @keyCircL@ because @p@ is applied to the leftmost part of @toks, before the keyword is removed.
 keyCircL :: String -> ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) ->
             [Lex.Token] -> Either SyntaxError (a, [Lex.Token])
-keyCircL k p= (circ (key k) p) >>> fst
+keyCircL k p = (circ (key k) p) >>> fst
 
 (>>>) :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> (a -> b) ->
          [Lex.Token] -> Either SyntaxError (b, [Lex.Token])
