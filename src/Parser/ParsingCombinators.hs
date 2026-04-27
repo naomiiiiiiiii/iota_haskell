@@ -60,8 +60,14 @@ unitP toks = case toks of
 epsilon :: [Lex.Token] -> Either SyntaxError ([a], [Lex.Token])
 epsilon = Right . (,) []
 
-(|:|) :: ([Lex.Token] -> Either SyntaxError pair) -> ([Lex.Token] -> Either SyntaxError pair) -> [Lex.Token] -> Either SyntaxError pair
-(|:|) = error "TODO"
+-- For two parsing combinators @p1@ and @p2@,
+-- @(p1 |:| p2) toks@ tries @p1@ on @toks@. If @p1@ succeeds, it returns the output of @p1@ on @toks@. If @p1@ fails, @(p1 |:| p2)@ returns the output of @p2@ on @toks@.
+(|:|) :: ([Lex.Token] -> Either SyntaxError pair) ->
+         ([Lex.Token] -> Either SyntaxError pair) ->
+         [Lex.Token] -> Either SyntaxError pair
+(|:|) p1 p2 toks = case p1 toks of
+                     Right out -> Right out
+                     Left _err -> p2 toks
 
 force :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token]) ) ->
          [Lex.Token] -> (a, [Lex.Token])
