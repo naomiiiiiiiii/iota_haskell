@@ -98,9 +98,12 @@ keyCircL :: String -> ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) ->
             [Lex.Token] -> Either SyntaxError (a, [Lex.Token])
 keyCircL k p = (circ (key k) p) >>> fst
 
+-- For parsing combinator @p@ and function @f@, @p >>> f@ applies @f@ to the result of @p@.
 (>>>) :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> (a -> b) ->
          [Lex.Token] -> Either SyntaxError (b, [Lex.Token])
-(>>>) = error "TODO"
+(>>>) p f toks = do
+  (pRes, remToks) <- p toks
+  return (f pRes, remToks)
 
 -- Top-level parsing function. Given a parsing combinator @p@ and a string to parse @s@, @parse@ will first lex @s@ (according to the provided @Lex.Keywords@), then apply @p@ to the lexed result.
 parse :: Lex.Keywords -> ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> String -> a
