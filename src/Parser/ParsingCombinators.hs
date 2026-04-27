@@ -1,7 +1,7 @@
 --Some generic parsing combinators as described in *ML for the Working Programmer*/
 -- If a parsing combinator @p@ is built to parse @Lex.Token@s into values of type @A@, @p:: [Lex.Token] -> Either SyntaxError (A, [Lex.Token])@. If the parsing combinator fails to parse an @a@, it will produce a syntax error. If it succeeds, it will produce a tuple. The first value in the tuple is the result of the parsing. The second value is the remaining, yet unparsed Lex.Tokens.
 
-module Parser.ParsingCombinators (ident, key, intP, unitP, epsilon, (|:|), force, circ, keyCircR, keyCircL, (>>>), repeat, parse)
+module Parser.ParsingCombinators (ident, key, intP, unitP, epsilon, (|:|), force, circ, keyCircR, keyCircL, (>>>), repeatP, parse)
   where
 
 import qualified Lexer.Lexer as Lex
@@ -104,6 +104,14 @@ keyCircL k p = (circ (key k) p) >>> fst
 (>>>) p f toks = do
   (pRes, remToks) <- p toks
   return (f pRes, remToks)
+
+-- For a parsing combinator @p@ and token list @toks@,
+-- @repeatP p toks@ applies @p@ to @toks@ until @p@ fails, collecting all the results in a list.
+-- When @p@ fails, @repeatP@ does not fail as well. It simply stops and returns the collected results.
+repeatP :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> [Lex.Token] -> Either SyntaxError ([a], [Lex.Token])
+repeatP p = ((circ (repeatP p) p) >>> cons) |:| epsilon
+  where
+    cons = uncurry (:)
 
 -- Top-level parsing function. Given a parsing combinator @p@ and a string to parse @s@, @parse@ will first lex @s@ (according to the provided @Lex.Keywords@), then apply @p@ to the lexed result.
 parse :: Lex.Keywords -> ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> String -> a
