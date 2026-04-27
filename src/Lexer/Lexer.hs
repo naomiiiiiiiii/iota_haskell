@@ -2,7 +2,7 @@
 
 -- A generic lexer implemented as described in *ML for the Working Programmer*/ (@scan@)
 -- Also an instantiation of the generic lexer to iota (@iotaScan@)
-module Lexer.Lexer (iotaScan)
+module Lexer.Lexer (Keywords, Token(..), scan, iotaScan)
 where
 
 import Data.Char (isAlpha, isAlphaNum, isDigit, isPunctuation, isSymbol, isPrint, isSpace)
