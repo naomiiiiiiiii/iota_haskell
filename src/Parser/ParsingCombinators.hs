@@ -15,9 +15,13 @@ import qualified Lexer.Lexer as Lex
 -- If the error is not caught, it will get to the toplevel parsing function (@parse@) and the parser will error out.
 data SyntaxError = SyntaxError String
 
--- force the provided @SyntaxError@ to run, causing the parser to fail immediately
+-- throw an error, making it clear that it comes from the ParsingCombinators file
+pcError :: String -> a
+pcError msg = error ("ParsingCombinators." ++ msg)
+
+-- force the provided @SyntaxError@ to run, causing the caller to fail immediately
 forceError :: SyntaxError -> a
-forceError (SyntaxError msg) = error msg
+forceError (SyntaxError msg) = pcError msg
 
 ------------
 --- Parsing combinators
@@ -27,8 +31,7 @@ forceError (SyntaxError msg) = error msg
 ident :: [Lex.Token] -> Either SyntaxError (String, [Lex.Token])
 ident toks = case toks of
           (Lex.Id s):remToks -> Right (s, remToks)
-          _ -> Left $ SyntaxError ("expected identifier Lex.Token, got " ++ (show toks))
-
+          _ -> Left $ SyntaxError ("ident: expected identifier Lex.Token, got " ++ (show toks))
 
 key :: String -> [Lex.Token] -> Either SyntaxError (String, [Lex.Token])
 key k toks = error "TODO"
@@ -64,5 +67,5 @@ keycircl = error "TODO"
 parse :: Lex.Keywords -> ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> String -> a
 parse keyWs p s = case p $ Lex.scan keyWs s of
                     Right (e, []) -> e -- Succesfully parsed all of @s@
-                    Right(e, _r:_) -> error ("Extra chars in phrase:: " ++ s ++ "\n")
-                    Left (SyntaxError msg) -> error msg -- SyntaxError was raised and not handled, so now the parser needs to fail.
+                    Right(e, _r:_) -> pcError ("parse: Extra chars in phrase: " ++ s)
+                    Left (SyntaxError msg) -> pcError msg -- SyntaxError was raised and not handled, so now the parser needs to fail.
