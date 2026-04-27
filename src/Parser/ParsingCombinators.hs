@@ -55,8 +55,10 @@ unitP toks = case toks of
               (Lex.Key "("):(Lex.Key ")"):remToks -> Right ((), remToks)
               _  -> Left $ SyntaxError ("unitP: expected (), got " ++ (show toks))
 
+-- @epsilon toks@ = @([], toks)@
+-- @epsilon@ can be used as the base case in recursive parsing combinators that return lists (for example, @repeat@)
 epsilon :: [Lex.Token] -> Either SyntaxError ([a], [Lex.Token])
-epsilon toks = error "TODO"
+epsilon = Right . (,) []
 
 (|:|) :: ([Lex.Token] -> Either SyntaxError pair) -> ([Lex.Token] -> Either SyntaxError pair) -> [Lex.Token] -> Either SyntaxError pair
 (|:|) = error "TODO"
