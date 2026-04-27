@@ -51,25 +51,31 @@ unitP toks = case toks of
               (Lex.Key "("):(Lex.Key ")"):remToks -> Right ((), remToks)
               _  -> Left $ SyntaxError ("unitP: expected (), got " ++ (show toks))
 
-epsilon :: [Lex.Token] -> ([a], [Lex.Token])
+epsilon :: [Lex.Token] -> Either SyntaxError ([a], [Lex.Token])
 epsilon toks = error "TODO"
 
-(|:|) :: ([Lex.Token] -> a) -> ([Lex.Token] -> a) -> [Lex.Token] -> a
+(|:|) :: ([Lex.Token] -> Either SyntaxError pair) -> ([Lex.Token] -> Either SyntaxError pair) -> [Lex.Token] -> Either SyntaxError pair
 (|:|) = error "TODO"
 
-force :: ([Lex.Token] -> (a, [Lex.Token]) ) -> [Lex.Token] -> (a, [Lex.Token])
+force :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token]) ) ->
+         [Lex.Token] -> (a, [Lex.Token])
 force = error "TODO"
 
-circ :: ([Lex.Token] -> (b, [Lex.Token])) -> ([Lex.Token] -> (a, [Lex.Token])) -> [Lex.Token] -> ((a, b), [Lex.Token])
+circ :: ([Lex.Token] -> Either SyntaxError (b, [Lex.Token])) ->
+        ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) ->
+        [Lex.Token] -> Either SyntaxError ((a, b), [Lex.Token])
 circ = error "TODO"
 
-keycircr :: ([Lex.Token] -> (a, [Lex.Token])) -> String -> [Lex.Token] -> (a, [Lex.Token])
+keycircr :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> String ->
+            [Lex.Token] -> Either SyntaxError (a, [Lex.Token])
 keycircr = error "TODO"
 
-keycircl :: String -> ([Lex.Token] -> (a, [Lex.Token])) -> [Lex.Token] -> (a, [Lex.Token])
+keycircl :: String -> ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) ->
+            [Lex.Token] -> Either SyntaxError (a, [Lex.Token])
 keycircl = error "TODO"
 
-(>>>) :: ([Lex.Token] -> (a, [Lex.Token])) -> (a -> b) -> [Lex.Token] -> (b, [Lex.Token])
+(>>>) :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> (a -> b) ->
+         [Lex.Token] -> Either SyntaxError (b, [Lex.Token])
 (>>>) = error "TODO"
 
 -- Top-level parsing function. Given a parsing combinator @p@ and a string to parse @s@, @parse@ will first lex @s@ (according to the provided @Lex.Keywords@), then apply @p@ to the lexed result.
