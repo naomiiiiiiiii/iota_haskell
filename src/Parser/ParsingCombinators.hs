@@ -27,7 +27,8 @@ forceError (SyntaxError msg) = pcError msg
 --- Parsing combinators
 ------------
 
--- Parse an identifier
+-- @ident toks@ parses the first identifier in @toks@
+-- Raises syntax error if @toks@ does not begin with an identifier
 ident :: [Lex.Token] -> Either SyntaxError (String, [Lex.Token])
 ident toks = case toks of
           (Lex.Id s):remToks -> Right (s, remToks)
