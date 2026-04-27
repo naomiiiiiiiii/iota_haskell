@@ -82,13 +82,21 @@ circ p2 p1 toks = do
   (resB, remToks) <- p2 midToks
   return ((resA, resB), remToks)
 
+-- For parsing combinator @p@ and string @k@,
+-- @keycircr p k toks@ first parses the keyword k from @toks@. Then, it applies @p@ to the remaining tokens and returns the result.
+-- @keycircr p k@ is equivalent to @circ p (key k)@, but it discards the result of @(key k)@
+-- It's called @keycircr@ because @p@ is applied to the rightmost part of @toks, after the keyword is removed.
 keycircr :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> String ->
             [Lex.Token] -> Either SyntaxError (a, [Lex.Token])
-keycircr = error "TODO"
+keycircr p k= (circ p (key k)) >>> snd
 
+-- For parsing combinator @p@ and string @k@,
+-- @keycircl k p toks@ first applies @p@ to @toks@ with result @(res, midToks)@. It then parses the keyword k from @midToks@, to get @(_, remToks)@. Finally, it returns @(res, remToks)@
+-- @keycircl p k@ is equivalent to @circ (key k) p@, but it discards the result of @(key k)@
+-- It's called @keycircl@ because @p@ is applied to the leftmost part of @toks, before the keyword is removed.
 keycircl :: String -> ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) ->
             [Lex.Token] -> Either SyntaxError (a, [Lex.Token])
-keycircl = error "TODO"
+keycircl k p= (circ (key k) p) >>> fst
 
 (>>>) :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> (a -> b) ->
          [Lex.Token] -> Either SyntaxError (b, [Lex.Token])
