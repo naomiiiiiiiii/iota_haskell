@@ -72,10 +72,15 @@ force p toks = case p toks of
                  Right out -> out
                  Left (SyntaxError errMsg) -> pcError ("forced " ++ errMsg)
 
+-- @circ@ is the parsing-combinator version of function composition
+-- For parsing combinator @p2@ that parses into type @b@ and @p1@ that parses into type @a@, @circ p2 p1@ will first run @p1@ to produce @(resA, midToks)@. @circ@ will then run @p2@ on @midToks@ to get @(resB, remToks@). Finally, @circ@ will return the composed result @((resA, resB), remToks)@
 circ :: ([Lex.Token] -> Either SyntaxError (b, [Lex.Token])) ->
         ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) ->
         [Lex.Token] -> Either SyntaxError ((a, b), [Lex.Token])
-circ = error "TODO"
+circ p2 p1 toks = do
+  (resA, midToks) <- p1 toks
+  (resB, remToks) <- p2 midToks
+  return ((resA, resB), remToks)
 
 keycircr :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) -> String ->
             [Lex.Token] -> Either SyntaxError (a, [Lex.Token])
