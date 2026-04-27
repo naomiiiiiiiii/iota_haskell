@@ -41,11 +41,15 @@ key k toks = case toks of
                (Lex.Key k0):remToks | (k == k0) -> Right (k, remToks)
                _ -> Left $ SyntaxError ("key: expected keyword" ++ k ++ ", got " ++ (show toks))
 
+-- If @toks@ begins with @Int i@, @intP toks@ parses the integer
+-- Raises syntax error otherwise
 intP :: [Lex.Token] -> Either SyntaxError (Int, [Lex.Token])
 intP toks = case toks of
               (Lex.Int i):remToks -> Right (i, remToks)
               _  -> Left $ SyntaxError ("intP: expected int, got " ++ (show toks))
 
+-- If @toks@ begins with unit, @unitP toks@ parses the unit
+-- Raises syntax error otherwise
 unitP :: [Lex.Token] -> Either SyntaxError ((), [Lex.Token])
 unitP toks = case toks of
               (Lex.Key "("):(Lex.Key ")"):remToks -> Right ((), remToks)
