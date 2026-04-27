@@ -19,10 +19,6 @@ data SyntaxError = SyntaxError String
 pcError :: String -> a
 pcError msg = error ("ParsingCombinators." ++ msg)
 
--- force the provided @SyntaxError@ to run, causing the caller to fail immediately
-forceError :: SyntaxError -> a
-forceError (SyntaxError msg) = pcError msg
-
 ------------
 --- Parsing combinators
 ------------
@@ -69,9 +65,12 @@ epsilon = Right . (,) []
                      Right out -> Right out
                      Left _err -> p2 toks
 
-force :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token]) ) ->
-         [Lex.Token] -> (a, [Lex.Token])
-force = error "TODO"
+-- For a parsing combinator @p@, @force p toks@ runs @p@ on @toks@. If @p@ fails, the entire parser is guaranteed to fail.
+force :: ([Lex.Token] -> Either SyntaxError pair ) ->
+         [Lex.Token] -> pair
+force p toks = case p toks of
+                 Right out -> out
+                 Left (SyntaxError errMsg) -> pcError ("forced " ++ errMsg)
 
 circ :: ([Lex.Token] -> Either SyntaxError (b, [Lex.Token])) ->
         ([Lex.Token] -> Either SyntaxError (a, [Lex.Token])) ->
