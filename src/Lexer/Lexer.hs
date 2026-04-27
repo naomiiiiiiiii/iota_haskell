@@ -1,8 +1,7 @@
 {-# LANGUAGE NamedFieldPuns#-}
 
 -- A generic lexer implemented as described in *ML for the Working Programmer*/ (@scan@)
--- Also an instantiation of the generic lexer to iota (@iotaScan@)
-module Lexer.Lexer (Keywords, Token(..), scan, iotaScan)
+module Lexer.Lexer (Keywords, Token(..), iotaKeywords, scan)
 where
 
 import Data.Char (isAlpha, isAlphaNum, isDigit, isPunctuation, isSymbol, isPrint, isSpace)
@@ -103,9 +102,6 @@ scan keywords = scanHelp []
                 NonGraphical -> (toks, dropWhile (not . isGraphical) s) -- remove all irrelevant chars
         in
           scanHelp newToks newS
-
-iotaScan :: String -> [Token]
-iotaScan = scan iotaKeywords
 
 ------------
 --- Lexer helpers
