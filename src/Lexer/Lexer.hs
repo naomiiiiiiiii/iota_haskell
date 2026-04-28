@@ -26,15 +26,15 @@ whichKeyword :: Keywords -> Char -> KeywordType
 whichKeyword keywords char =
   if (char == commentL keywords) then CommentL
   else if (isAlpha char) then Alpha
-  else if (isDigit char || char == '-') then Number -- @char@ indicates the beginning of a number
+  else if (isDigit char) then Number -- @char@ indicates the beginning of a number
   else if (isSymbolic char) then Symbol
   else if (not $ isGraphical char) then NonGraphical -- @char@ is whitespace or other irrelevant chararacter
   else error ("Lexer.whichKeyword : Could not lex character " ++ [char])
 
 iotaKeywords :: Keywords
 iotaKeywords = Keywords {alphaNumeric, symbols, commentL, commentR}
-  where alphaNumeric = ["ret", "bind", "let", "ref", "in", "Nat", "Unit", "Ref", "Comp", "let"]
-        symbols = ["(", ")", "\\", ".", "=", ":=", "!", "->", "+", "*", "-", "/"]
+  where alphaNumeric = ["ret", "bind", "let", "ref", "in", "Int", "Unit", "Ref", "Comp", "let"]
+        symbols = ["(", ")", "\\", ".", "=", ":=", "!", "->", "+", "*", "/"]
         commentL = '{' -- TODO, would be nice to have a multi-character comment intro like /* comment */
         commentR = '}'
 
