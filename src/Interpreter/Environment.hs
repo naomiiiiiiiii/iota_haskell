@@ -1,7 +1,7 @@
 {-# LANGUAGE NamedFieldPuns#-}
 
 -- An environment of global and local Iota expression bindings, useful in
--- typechecking and expression reduction.
+-- typechecking
 module Interpreter.Environment (Env(..), newEnv, addGlobalEnv, emptyEnv)
   where
 
