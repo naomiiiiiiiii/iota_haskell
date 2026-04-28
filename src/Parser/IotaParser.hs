@@ -21,11 +21,11 @@ baseTyp = ((key "Int") >>> (\_ -> AST.IntTyp)) |:| ((key "Unit") >>> (\_ -> AST.
 -- parse any AST type
 typ :: [Lex.Token] -> Either SyntaxError (AST.Typ, [Lex.Token])
 typ = ((circ (keyCircR atomTyp "->") atomTyp) >>> AST.ArrowTyp) -- case for function types
-      |:| ((keyCircR atomTyp "Ref") >>> AST.RefTyp) -- case for reference types
-      |:| ((keyCircR atomTyp "Comp") >>> AST.CompTyp) -- case for computations
       |:| atomTyp -- case for base types or types wrapped in parentheses
-  where atomTyp = (baseTyp
-                   |:| (keyCircL ")" (keyCircR typ "(")))
+  where atomTyp = baseTyp
+                   |:| (keyCircL ")" (keyCircR typ "("))
+                   |:| ((keyCircR atomTyp "Ref") >>> AST.RefTyp) -- case for reference types
+                   |:| ((keyCircR atomTyp "Comp") >>> AST.CompTyp) -- case for computations
 
 -- parse a type-annotated variable
 typedId :: [Lex.Token] -> Either SyntaxError ((String, AST.Typ), [Lex.Token])
