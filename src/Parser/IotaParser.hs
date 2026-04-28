@@ -56,6 +56,9 @@ expr =
                             (keyCircL "," expr)) -- The bound expression (first expression)
               "(" ) -- opening parens to the inside of the @bind@
         "bind") >>> AST.Bind)
+  |:| ((keyCircR atom "ref") >>> AST.Ref)
+  |:| ((circ expr (keyCircL ":=" atom)) >>> AST.Asgn)
+  |:| (circ atom (keyCircL "+" atom) >>> AST.plus)
   |:| ((circ (repeatP atom) atom) >>> AST.applyList) -- a single atomic expression or an application of one atom to other atom(s). At least one expression must be present here, the empty string should not parse as an expression
   -- Atomic expressions
   where atom = (ident >>> AST.Free)

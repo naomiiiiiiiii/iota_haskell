@@ -1,5 +1,5 @@
 -- The AST for the Iota language and helper functions
-module AST (Typ(..) , Exp(..), absList, applyList)
+module AST (Typ(..) , Exp(..), absList, applyList, plus)
 where
 
 -- TODO: Add strings?
@@ -15,7 +15,7 @@ data Exp = Free String
          | Star -- @Star@ is the only value of type @Unit@, written "()"
          | Int Int
          | Loc Int -- location into the store. This is an internal expression, not accessible to the user.
-         | Plus (Exp, Exp) -- Addition on integer expressions, written "x + y"
+         | Binop (Bop, Exp, Exp)
          | Lam ((String, Typ),  Exp) -- lambdas are written "\(x : Int).x", for example
          | Ap (Exp, Exp) -- function application is written "f x y" or "f(x y)"
          | Ret Exp -- return into the state monad, written "ret [Exp]"
@@ -23,6 +23,10 @@ data Exp = Free String
          | Ref Exp -- a reference to an expression, written "ref [Exp]"
          | Asgn (Exp, Exp) -- assign to a reference, written "[Exp] := [Exp]"
          | Deref Exp -- dereference a reference, written "![Exp]"
+  deriving(Show, Eq)
+
+-- TODO: Add more binops
+data Bop = Plus
   deriving(Show, Eq)
 
 ------------
@@ -44,7 +48,7 @@ mapExpWDepth varCase start expr =
     Star -> expr
     Int _ -> expr
     Loc _ -> expr
-    Plus (exp1, exp2) -> Plus (mapExpWDepthHelp start exp1, mapExpWDepthHelp start exp2)
+    Binop (op, exp1, exp2) -> Binop (op, mapExpWDepthHelp start exp1, mapExpWDepthHelp start exp2)
     Lam (arg, body) -> Lam(arg, (mapExpWDepthHelp (start + 1)) body)
     Ap(exp1, exp2) -> Ap((mapExpWDepthHelp start exp1), (mapExpWDepthHelp start exp2))
     Ret(exp0) -> Ret(mapExpWDepthHelp start exp0)
@@ -74,3 +78,6 @@ absList (varList, body) = foldr (\typedVar bodyAcc -> Lam(typedVar, (abstract 0 
 -- @applyList fn args@ creates the application of @fn@ to @args@
 applyList :: (Exp, [Exp]) -> Exp
 applyList (fn, args) = foldl (\bigApp arg -> Ap(bigApp, arg)) fn args
+
+plus :: (Exp, Exp) -> Exp
+plus (e1, e2) = Binop(Plus, e1, e2)
