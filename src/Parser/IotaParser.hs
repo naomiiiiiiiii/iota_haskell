@@ -32,6 +32,19 @@ typedId :: [Lex.Token] -> Either SyntaxError ((String, AST.Typ), [Lex.Token])
 typedId = keyCircL ")" (circ typ -- parse the type
                          (keyCircL ":" (keyCircR ident "("))) -- parse the identifier
 
+-- parse an expression
+-- expr proceeds by casing on the input list @toks@
+-- The cases are separated by the @|:|@ operator -- when a case fails, @expr@ drops into the next case via @|:|@
+expr :: [Lex.Token] -> Either SyntaxError (AST.Exp, [Lex.Token])
+expr =
+ -- First case : expr is a lambda
+  (circ expr -- Looking for the body of the function
+    (keyCircL "." -- Looking for the period that indicates no more arguments
+      (keyCircR
+        (repeatP typedId) -- Looking for a list of arguments like "(x : Int)(y: Int -> Int)"
+        "\\")) -- Looking for a lambda "\"
+    >>> AST.absList) -- Combine the argument list and the body into an @AST.Exp@
+
 iotaParser :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token]))
 iotaParser = error "TODO"
 
