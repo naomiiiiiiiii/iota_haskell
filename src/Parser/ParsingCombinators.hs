@@ -35,7 +35,7 @@ ident toks = case toks of
 key :: String -> [Lex.Token] -> Either SyntaxError (String, [Lex.Token])
 key k toks = case toks of
                (Lex.Key k0):remToks | (k == k0) -> Right (k, remToks)
-               _ -> Left $ SyntaxError ("key: expected keyword" ++ k ++ ", got " ++ (show toks))
+               _ -> Left $ SyntaxError ("key: expected keyword " ++ k ++ ", got " ++ (show toks))
 
 -- If @toks@ begins with @Int i@, @intP toks@ parses the integer
 -- Raises syntax error otherwise
