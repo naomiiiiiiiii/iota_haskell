@@ -1,5 +1,5 @@
 -- A typechecker for the Iota language
-module Interpreter.Typechecker (typeChecker, Env(..), newEnv, addGlobalEnv, emptyEnv)
+module Interpreter.Typechecker (typeChecker)
   where
 
 import qualified AST as AST
