@@ -37,7 +37,7 @@ typedId = keyCircL ")" (circ typ -- parse the type
 -- The cases are separated by the @|:|@ operator -- when a case fails, @expr@ drops into the next case via @|:|@
 expr :: [Lex.Token] -> Either SyntaxError (AST.Exp, [Lex.Token])
 expr =
- -- First case : expr is a lambda
+ -- First case : @expr@ is a lambda
   (circ expr -- Looking for the body of the function
     (keyCircL "." -- Looking for the period that indicates no more arguments
       (keyCircR
@@ -46,6 +46,16 @@ expr =
     >>> AST.absList) -- Combine the argument list and the body into an @AST.Exp@
   |:| ((keyCircR atom "!") >>> AST.Deref)
   |:| ((keyCircR atom "ret") >>> AST.Ret)
+  -- Case below: @expr@ is a bind expression with shape "bind([Exp], \[Name].[Exp])"
+  |:| ((keyCircR (keyCircR (circ
+                             (circ -- "\[Name].[Exp]"
+                               (keyCircL ")" expr) -- The bind's body (2nd expression, after the period), followed by a closing paren
+                               (keyCircL "."
+                                 (keyCircR ident "\\")) -- Get the name of the bound expression
+                             )
+                            (keyCircL "," expr)) -- The bound expression (first expression)
+              "(" ) -- opening parens to the inside of the @bind@
+        "bind") >>> AST.Bind)
   |:| ((circ (repeatP atom) atom) >>> AST.applyList) -- a single atomic expression or an application of one atom to other atom(s). At least one expression must be present here, the empty string should not parse as an expression
   -- Atomic expressions
   where atom = (ident >>> AST.Free)
