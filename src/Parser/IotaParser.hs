@@ -1,3 +1,4 @@
+-- A parser for the iota language (AST.hs), created solely out of parsing combinators (Parser/ParsingCombinators.hs)
 module Parser.IotaParser (parseIota)
   where
 
@@ -65,9 +66,9 @@ expr =
                |:| constant
                |:| (keyCircL ")" (keyCircR expr "("))
 
+-- Parse a let-binding of the shape "[Name] = [Expr]"
+iotaParser :: ([Lex.Token] -> Either SyntaxError ((String, AST.Exp), [Lex.Token]))
+iotaParser = circ expr (keyCircL "=" (keyCircR ident "let"))
 
-iotaParser :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token]))
-iotaParser = error "TODO"
-
-parseIota :: String -> AST.Exp
+parseIota :: String -> (String, AST.Exp)
 parseIota = parse Lex.iotaKeywords iotaParser
