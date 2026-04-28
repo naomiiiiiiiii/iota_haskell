@@ -44,6 +44,13 @@ expr =
         (repeatP typedId) -- Looking for a list of arguments like "(x : Int)(y: Int -> Int)"
         "\\")) -- Looking for a lambda "\"
     >>> AST.absList) -- Combine the argument list and the body into an @AST.Exp@
+  |:| ((keyCircR atom "!") >>> AST.Deref)
+  |:| ((keyCircR atom "ret") >>> AST.Ret)
+  -- Atomic expressions
+  where atom = (ident >>> AST.Free)
+               |:| constant
+               |:| (keyCircL ")" (keyCircR expr "("))
+
 
 iotaParser :: ([Lex.Token] -> Either SyntaxError (a, [Lex.Token]))
 iotaParser = error "TODO"
