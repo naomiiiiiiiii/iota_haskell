@@ -1,5 +1,5 @@
 -- The AST for the Iota language and helper functions
-module AST (Typ(..) , Exp(..), absList)
+module AST (Typ(..) , Exp(..), absList, applyList)
 where
 
 -- TODO: Add strings?
@@ -70,3 +70,7 @@ abstract i boundVarStr = let varCase = \j -> ( let freeVarHandler = \varStr ->
 -- For each argument in @args@, @absList@ binds all free occurences of that argument in @body@ to the right bound variable, based on the order of @args@.
 absList :: ([(String, Typ)], Exp) -> Exp
 absList (varList, body) = foldr (\typedVar bodyAcc -> Lam(typedVar, (abstract 0 (fst typedVar) bodyAcc))) body varList
+
+-- @applyList fn args@ creates the application of @fn@ to @args@
+applyList :: (Exp, [Exp]) -> Exp
+applyList (fn, args) = foldl (\bigApp arg -> Ap(bigApp, arg)) fn args
