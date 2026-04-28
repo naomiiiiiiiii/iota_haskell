@@ -94,7 +94,7 @@ scan keywords = scanHelp []
                 -- Case below: we are lexing an alpha-numeric identifier or alphabetical keyword
                 Alpha -> let (alphas, remS) = span isAlphaNum s in
                            ((alphaTok keywords alphas):toks, remS)
-                Number -> let (num, remS) = span isDigit sTail in -- gather all digits from the front of @s@
+                Number -> let (num, remS) = span isDigit s in -- gather all digits from the front of @s@
                             (intTok(num):toks, remS)
                 -- Case below: We could be lexing an integer "-5" or a function type "->"
                 Symbol | (sHead == '-') -> let (num, remSTail) = span isDigit sTail in -- gather all digits from the front of @s@, excluding @sHead@, which is a minus-sign
