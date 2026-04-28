@@ -94,14 +94,20 @@ scan keywords = scanHelp []
                 -- Case below: we are lexing an alpha-numeric identifier or alphabetical keyword
                 Alpha -> let (alphas, remS) = span isAlphaNum s in
                            ((alphaTok keywords alphas):toks, remS)
-                Number -> let (num, remSTail) = span isDigit sTail in -- gather all digits from the front of @s@, excluding @sHead@, which could be a minus-sign
-                            (intTok(sHead:num):toks, remSTail) -- add @sHead@ back, pass to @intTok@
-                Symbol -> let (tok, remS) = scanSymbol keywords [sHead] sTail in
-                            (tok:toks, remS)
+                Number -> let (num, remS) = span isDigit sTail in -- gather all digits from the front of @s@
+                            (intTok(num):toks, remS)
+                -- Case below: We could be lexing an integer "-5" or a function type "->"
+                Symbol | (sHead == '-') -> let (num, remSTail) = span isDigit sTail in -- gather all digits from the front of @s@, excluding @sHead@, which is a minus-sign
+                           if (length num /= 0)
+                           then (intTok(sHead:num):toks, remSTail) -- It is an integer
+                           else scanSymbolHelp sHead sTail toks -- It is a function type
+                Symbol -> scanSymbolHelp sHead sTail toks
                 -- @sHead@ is whitespace or other irrelevant char
                 NonGraphical -> (toks, dropWhile (not . isGraphical) s) -- remove all irrelevant chars
         in
           scanHelp newToks newS
+    scanSymbolHelp sHead sTail toks = let (tok, remS) = scanSymbol keywords [sHead] sTail in
+                                        (tok:toks, remS)
 
 ------------
 --- Lexer helpers
