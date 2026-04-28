@@ -1,5 +1,5 @@
 -- The AST for the Iota language and helper functions
-module AST (Typ(..) , Exp(..), absList, applyList, plus)
+module AST (Typ(..) , Exp(..), absList, applyList, plus, bind)
 where
 
 -- TODO: Add strings?
@@ -81,3 +81,6 @@ applyList (fn, args) = foldl (\bigApp arg -> Ap(bigApp, arg)) fn args
 
 plus :: (Exp, Exp) -> Exp
 plus (e1, e2) = Binop(Plus, e1, e2)
+
+bind :: (Exp, (String, Exp)) -> Exp
+bind (exp0, (name, exp1)) = Bind(exp0, (name, (abstract 0 name exp1)))

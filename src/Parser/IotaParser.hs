@@ -55,7 +55,7 @@ expr =
                              )
                             (keyCircL "," expr)) -- The bound expression (first expression)
               "(" ) -- opening parens to the inside of the @bind@
-        "bind") >>> AST.Bind)
+        "bind") >>> AST.bind)
   |:| ((keyCircR atom "ref") >>> AST.Ref)
   |:| ((circ expr (keyCircL ":=" atom)) >>> AST.Asgn)
   |:| (circ atom (keyCircL "+" atom) >>> AST.plus)
