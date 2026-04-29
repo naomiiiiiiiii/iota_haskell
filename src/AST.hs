@@ -1,6 +1,10 @@
 -- The AST for the Iota language and helper functions
+{-# LANGUAGE OverloadedStrings #-}
+
 module AST (Typ(..) , Exp(..), absList, applyList, plus, bind)
 where
+
+import Prettyprinter
 
 -- TODO: Add strings?
 data Typ = IntTyp
@@ -113,3 +117,26 @@ plus (e1, e2) = Binop(Plus, e1, e2)
 
 bind :: (Exp, (String, Exp)) -> Exp
 bind (exp0, (name, exp1)) = Bind(exp0, (name, (abstract 0 name exp1)))
+
+------------
+--- Pretty instances
+------------
+
+instance Pretty Typ where
+  pretty typ = case typ of
+    IntTyp -> "Int"
+    UnitTyp -> "Unit"
+    ArrowTyp (t1, t2) -> prettyAtom t1 <> "->" <> (prettyAtom t2)
+    RefTyp t -> "Ref" <+> (prettyAtom t)
+    CompTyp t -> "Comp" <+> (prettyAtom t)
+    where
+      prettyAtom typ = case typ of
+        IntTyp -> pretty typ
+        UnitTyp -> pretty typ
+        ArrowTyp _ -> parens $ pretty typ
+        RefTyp _ -> parens $ pretty typ
+        CompTyp _ -> parens $ pretty typ
+
+instance Pretty Bop where
+  pretty bop = case bop of
+    Plus -> "+"
