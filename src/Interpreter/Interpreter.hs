@@ -37,7 +37,7 @@ interpret = do
   where
     -- print the evaluation of a let-binding
     prettyStep :: String -> AST.Typ -> AST.Exp -> M.Map Int AST.Exp -> Doc ann
-    prettyStep name tau v finalStore = "TODO"
+    prettyStep name tau v finalStore = pretty v
     --   (pretty name) <> ":" <> (pretty tau) <+> "=>*" <+> (pretty v) <\>
     --   "New store is:" <+> (pretty finalStore)
     -- (<\>) s1 s2 = s1 <> "\n" <> s2
