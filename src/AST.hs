@@ -79,6 +79,26 @@ shift i threshold =
                               else Bound j
         in (Free, boundCase))
   in mapExpWDepth varCase 0
+
+-- For variable index @i@, @subst i v expr@ equals expr[Bound i := v], which is to say
+-- @expr@ with all occurences of variable @Bound i@ replaced by @v@
+-- START HERE refactored this so if there's a bug look here
+subst :: Int -> Exp -> Exp -> Exp
+subst i v =
+  let varCase = \varDepth -> (
+                  let boundCase = \j ->
+                        -- Why compare @j@ to the desired variable @i@ plus the variable depth? When going under a lambda, all the variable indexes shift up, including @i@. For example, (Bound 0 + \x.Bound 1)[0:= Int 5] would be (5 + \x. 5)
+                        case (compare j (i + varDepth)) of
+                          LT ->  Bound j -- @j@ is unaffected by the substitution
+                          EQ -> shift varDepth 0 v -- @j@ is the desired variable, so we need to substitute. We shift @v@ up @varDepth@ to avoid @v@ capturing any local variables
+                          GT -> Bound(j-1) -- @(i + varDepth)@ has been removed, so @j@ moves leftwards in the lambda stack
+                  in (Free, boundCase ))
+  in mapExpWDepth varCase 0
+
+------------
+--- Functions for constructing ASTs
+------------
+
 -- @absList args body@ creates a lambda abstraction with arguments @args@ (by name and type) and body @body@
 -- For each argument in @args@, @absList@ binds all free occurences of that argument in @body@ to the right bound variable, based on the order of @args@.
 absList :: ([(String, Typ)], Exp) -> Exp
