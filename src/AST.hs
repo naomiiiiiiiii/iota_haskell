@@ -58,7 +58,7 @@ mapExpWDepth varCase start expr =
     Deref ref -> Deref(mapExpWDepthHelp start ref)
 
 ------------
---- Functions for constructing ASTs
+--- Functions for manipulating AST variables
 ------------
 -- For variable index i >= 0, @abstract i var exp@ will turn all free occurences of variable @var@ in @exp@ into occurences of the bound variable indexed by @i@
 -- This function is useful when constructing a lambda abstraction. The lambda body starts out with only free variables. But, as each binder is added over the body expression, the corresponding free variable in the body is captured by the binder and converted to a bound variable
@@ -70,6 +70,15 @@ abstract i boundVarStr = let varCase = \j -> ( let freeVarHandler = \varStr ->
                                                 in (freeVarHandler, Bound))
                          in mapExpWDepth varCase i
 
+-- @shift i threshold exp@ shifts @exp@'s bound variables up by @i@, while ignoring variables <= @dot@*)
+shift :: Int -> Int -> Exp -> Exp
+shift i threshold =
+  let varCase = \varDepth -> (
+        let boundCase = \j -> if j>=(varDepth + threshold)
+                              then Bound(j+i)
+                              else Bound j
+        in (Free, boundCase))
+  in mapExpWDepth varCase 0
 -- @absList args body@ creates a lambda abstraction with arguments @args@ (by name and type) and body @body@
 -- For each argument in @args@, @absList@ binds all free occurences of that argument in @body@ to the right bound variable, based on the order of @args@.
 absList :: ([(String, Typ)], Exp) -> Exp
