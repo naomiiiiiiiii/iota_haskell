@@ -137,6 +137,47 @@ instance Pretty Typ where
         RefTyp _ -> parens $ pretty typ
         CompTyp _ -> parens $ pretty typ
 
+-- TODO: atomic expression printing?
+instance Pretty Exp where
+  pretty exp =
+    case exp of
+      Free str -> pretty str
+      Bound i -> "Unmatched binder: " <> (pretty i)
+      Star -> "()"
+      Int i -> pretty i
+      Loc i -> "Address: " <> (parens $ pretty i)
+      Binop (bop, exp1, exp2) -> (prettyAtom exp1) <+> (pretty bop) <+> (prettyAtom exp2)
+      Lam (arg, oldBody) -> let (argStr, body) = stripAbs arg oldBody in
+                              abs argStr (pretty body)
+      Ap(fn, arg) -> pretty fn <+> (prettyAtom arg)
+      Ret exp0 -> "ret" <+> (prettyAtom exp0)
+      Bind(exp1, (name, body)) ->
+        let newBody = subst 0 (Free name) body in
+          "bind" <> parens (pretty exp1 <> "," <+>
+                             abs (pretty name) (pretty newBody))
+      Ref exp0 -> "ref" <+> (prettyAtom exp0)
+      Asgn (lhs, rhs) -> (prettyAtom lhs) <+> ":=" <+> (pretty rhs)
+      Deref ref -> "!" <> (prettyAtom ref)
+    where
+      prettyAtom exp = case exp of
+        Free(str) -> pretty str
+        Int _ -> pretty exp
+        Loc _ -> pretty exp
+        Star  -> pretty exp
+        _ -> parens $ pretty exp
+     -- Given @(argStr, argTyp)@ (the argument) and @body@, the body to a lambda,
+     -- @stripAbs@ returns a tuple where the first component is string "(argStr: argTyp)", the pretty-printed argument to the lambda
+     -- The second component is expression @body[0 := Free(argStr)]@.
+      -- After all the abstractions have been stripped, the returned lambda body will have no bound variables and can be pretty-printed easily.
+      stripAbs (argStr, argTyp) body =
+       -- START HERE removed some complexity from @stripAbs@, if there is a bug with nameclashes look here
+        let newBody = subst 0 (Free argStr) body
+            arg =  parens $ (pretty argStr) <+> ":" <+> (pretty argTyp) in
+          (arg, newBody)
+     -- Given a string representing the arguments and a string representing body, pretty print the lambda abstraction
+      abs :: Doc ann -> Doc ann -> Doc ann
+      abs argsStr bodyStr = "\\" <>  argsStr <> "." <> bodyStr
+
 instance Pretty Bop where
   pretty bop = case bop of
     Plus -> "+"
