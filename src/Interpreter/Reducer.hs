@@ -29,5 +29,6 @@ rError msg = error ("RUNTIME ERROR (Reducer.reduce) " ++ msg)
 
 -- @reduce@ takes an expression and reduces it to a value
 -- While doing this, it reads from the environment of global typed expression declarations. This environment is contained in the reader.
-reduce :: AST.Exp -> ReaderT (M.Map String (AST.Typ, AST.Exp)) (State (M.Map Int AST.Exp)) AST.Exp
-reduce = return
+-- It also modifies and reads from the global memory store. This is contained in the state.
+reduce :: AST.Exp -> StateT (M.IntMap AST.Exp) (Reader Env.Env) AST.Exp
+reduce expr = error "TODO" 
