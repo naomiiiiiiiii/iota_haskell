@@ -2,11 +2,17 @@
 
 -- An environment of global and local Iota expression bindings, useful in
 -- typechecking
-module Interpreter.Environment (Env(..), newEnv, addGlobalEnv, emptyEnv)
+module Interpreter.Environment (Env(..)
+                              , newEnv
+                              , addGlobalEnv, addLocalEnv
+                              , lookUpGlobalU, lookUpLocalU
+                              , emptyEnv)
   where
 
 import qualified AST as AST
 import qualified Data.Map as M
+import Data.List ((!?))
+import Control.Monad.Reader
 
 ------------
 --- Global and local environments
@@ -24,5 +30,33 @@ newEnv globalEnv = Env {globalEnv, localEnv = []}
 addGlobalEnv :: String -> (AST.Typ, AST.Exp) -> Env -> Env
 addGlobalEnv key v env = env {globalEnv = M.insert key v (globalEnv env)}
 
+addLocalEnv :: AST.Typ -> Env -> Env
+addLocalEnv ty env = env {localEnv = ty:(localEnv env)}
+
+lookUpGlobal :: String -> Reader Env (Maybe (AST.Typ, AST.Exp))
+lookUpGlobal key = do
+  Env global _ <- ask
+  return $ M.lookup key global
+
+lookUpLocal :: Int -> Reader Env (Maybe AST.Typ)
+lookUpLocal key = do
+  Env _ localEnv <- ask
+  return $ localEnv !? key
+
+lookUpGlobalU :: String -> Reader Env (AST.Typ, AST.Exp)
+lookUpGlobalU = lookUpU lookUpGlobal "lookUpGlobalU" "identifier"
+
+lookUpLocalU :: Int -> Reader Env AST.Typ
+lookUpLocalU = lookUpU lookUpLocal "lookUpLocalU" "variable"
+
 emptyEnv :: Env
 emptyEnv = Env M.empty []
+
+-- unsafe lookup
+lookUpU :: (Monad m, Show a) => (a -> m (Maybe b)) -> [Char] -> [Char] -> a -> m b
+lookUpU lookUpFn fnName errorName key= do
+  outMaybe <- lookUpFn key
+  case outMaybe of
+    Just out -> return out
+    Nothing -> error ("Environment." ++ fnName ++ ": "
+                      ++ "Unbound " ++ errorName ++ " " ++ (show key))
