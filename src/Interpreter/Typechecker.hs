@@ -59,6 +59,19 @@ typeChecker expr = case expr of
             CompTyp _ -> return tauOut
             _ -> tcError ("expected bind to return a computation, instead got " ++ (showTyping body tauOut))
         _ -> tcError ("cannot bind " ++ (showTyping exp0 tauComp))
+
+    Ref(exp0) -> CompTyp <$> RefTyp <$> typeChecker exp0  -- a reference is a delayed computation which, when run, stores @m0@ and then evaluates to a location
+    Asgn(loc, rhs) -> do
+       tauLoc <- typeChecker loc
+       tauRHS <- typeChecker rhs
+       case tauLoc of
+         RefTyp tauContents | (tauContents == tauRHS) -> return $ CompTyp UnitTyp
+         _ -> tcError ("cannot assign " ++ (showTyping rhs tauRHS) ++ " to ref of type " ++ (show tauLoc))
+    Deref loc -> do
+      tauLoc <- typeChecker loc
+      case tauLoc of
+       RefTyp tauContents -> return $ CompTyp tauContents
+       _ -> tcError ("cannot dereference " ++ (showTyping loc tauLoc))
   where
     -- Given a binop, @bopTyp@ returns (in order) the first argument type, the second argument type, and the return type
     bopTyp :: Bop -> (Typ, Typ, Typ)
