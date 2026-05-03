@@ -63,7 +63,7 @@ epsilon = Right . (,) []
          [Lex.Token] -> Either SyntaxError pair
 (|:|) p1 p2 toks = case p1 toks of
                      Right out -> Right out
-                     Left _err -> p2 toks
+                     Left _err -> p2 toks -- TODO: Could improve error messaging here with @ifLeft (p2 toks) (\(SyntaxError str) -> str ++ ", called by |:|")
 
 -- For a parsing combinator @p@, @force p toks@ runs @p@ on @toks@. If @p@ fails, the entire parser is guaranteed to fail.
 force :: ([Lex.Token] -> Either SyntaxError pair ) ->
