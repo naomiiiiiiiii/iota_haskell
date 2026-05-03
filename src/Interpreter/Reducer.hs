@@ -41,3 +41,26 @@ reduce expr = case expr of
   Ref _ -> return expr -- Suspended computation
   Asgn _ -> return expr -- Suspended computation
   Deref _ -> return expr  -- Suspended computation
+  Binop (op, expr1, expr2) ->
+    do
+      v1 <- reduce expr1
+      v2 <- reduce expr2
+      return $ semanticOp op v1 v2
+
+-- Given an AST binop, return the @Exp -> Exp -> Exp@ function that does what the @Bop@ means
+semanticOp :: Bop -> Exp -> Exp -> Exp
+semanticOp Plus e1 e2  =
+  let errStr = "expected integer argument to (+), recieved " in
+    case (e1, e2) of
+      (Int v1, Int v2) -> Int (v1 + v2)
+      (Int _, _) -> rError (errStr ++ (show e2))
+      _ -> rError (errStr ++ (show e1))
+
+------------
+--- Pretty printing for the store
+------------
+instance (Pretty a) => Pretty (M.IntMap a) where
+  pretty store = braces $ concatWith (\x y -> x <> "," <+> y)
+                 (map (\(k, v) -> parens $ ("Loc:" <+> (pretty k) <> "," <+>
+                                          "Contents:" <+> (pretty v)))
+                   (M.assocs store))
