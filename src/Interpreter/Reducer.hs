@@ -63,6 +63,45 @@ reduce expr = case expr of
     unsuspend :: AST.Exp -> StateT (M.IntMap AST.Exp) (Reader Env.Env) AST.Exp
     unsuspend comp = case comp of
      Ret exp0 -> reduce exp0
+     Ref exp0 -> do
+       val0 <- reduce exp0
+       -- Add @val0@ to the store
+       nextIndex <- getNextKey
+       modify (\store -> M.insert nextIndex val0 store)
+       return $ Loc nextIndex
+     Asgn(loc, rhs) -> do
+       index <- getIndex "cannot assign to non-location: " <$> reduce loc
+       rhsVal <- reduce rhs
+       let errStr = "assigning to uninitialized location: " ++ (show loc)
+       -- Update location @index@ to store @rhsVal@
+       modify (\store -> M.alter (\case
+                                     Just _ -> Just rhsVal
+                                     Nothing -> rError errStr)
+                         index
+                         store)
+       return Star -- Assignments don't return a meaningful value, they only update the store
+     Deref loc -> do
+       index <- getIndex "cannot dereference non-location: " <$> reduce loc
+       store <- get
+       case M.lookup index store of
+         Just out -> return out
+         Nothing -> rError ("dereferencing uninitialized location: " ++ (show loc))
+     _ -> rError ("expected computation, got " ++ (show comp))
+    -- @getIndex@ gets the integer index out of the provided expression
+    -- if the provided expression is not a raw location, @getIndex@ fails
+    getIndex :: String -> Exp -> Int
+    getIndex errStr loc = case loc of
+                            Loc index -> index
+                            _ -> rError (errStr ++ (show loc))
+
+-- @getNextKey@ returns the next available index into the store
+-- TODO: This is a little slow, would be faster if you stored next key in the state
+    getNextKey :: (Monad b) => StateT (M.IntMap a) b Int
+    getNextKey = do
+      store <- get
+      return $ case M.lookupMax store of
+                 Just (maxKey, _) -> maxKey + 1
+                 Nothing -> 0 -- store is currently empty
 
 -- Given an AST binop, return the @Exp -> Exp -> Exp@ function that does what the @Bop@ means
 semanticOp :: Bop -> Exp -> Exp -> Exp
