@@ -1,7 +1,7 @@
 -- The AST for the Iota language and helper functions
 {-# LANGUAGE OverloadedStrings #-}
 
-module AST (Typ(..) , Exp(..), Bop(..))
+module AST (Typ(..) , Exp(..), Bop(..), prettyTyping)
 where
 
 import Prettyprinter
@@ -130,17 +130,20 @@ instance Pretty Typ where
     RefTyp t -> "Ref" <+> (prettyAtom t)
     CompTyp t -> "Comp" <+> (prettyAtom t)
     where
-      prettyAtom typ = case typ of
-        IntTyp -> pretty typ
-        UnitTyp -> pretty typ
-        ArrowTyp _ -> parens $ pretty typ
-        RefTyp _ -> parens $ pretty typ
-        CompTyp _ -> parens $ pretty typ
+      prettyAtom ty = case ty of
+        IntTyp -> pretty ty
+        UnitTyp -> pretty ty
+        ArrowTyp _ -> parens $ pretty ty
+        RefTyp _ -> parens $ pretty ty
+        CompTyp _ -> parens $ pretty ty
 
--- TODO: atomic expression printing?
+-- @prettyTyping exp typ@ is "(@pretty exp@ : @pretty typ@)"
+prettyTyping :: Exp -> Typ -> Doc ann
+prettyTyping expr typ = parens $ (pretty expr) <+> ":" <+> (pretty typ)
+
 instance Pretty Exp where
-  pretty exp =
-    case exp of
+  pretty expr =
+    case expr of
       Free str -> pretty str
       Bound i -> "Unmatched binder: " <> (pretty i)
       Star -> "()"
@@ -148,23 +151,23 @@ instance Pretty Exp where
       Loc i -> "Address: " <> (parens $ pretty i)
       Binop (bop, exp1, exp2) -> (prettyAtom exp1) <+> (pretty bop) <+> (prettyAtom exp2)
       Lam (arg, oldBody) -> let (argStr, body) = stripAbs arg oldBody in
-                              abs argStr (pretty body)
-      Ap(fn, arg) -> pretty fn <+> (prettyAtom arg)
+                              prettyAbs argStr (pretty body)
+      Ap(fn, arg) -> prettyAtom fn <+> (prettyAtom arg)
       Ret exp0 -> "ret" <+> (prettyAtom exp0)
       Bind(exp1, (name, body)) ->
         let newBody = subst 0 (Free name) body in
           "bind" <> parens (pretty exp1 <> "," <+>
-                             abs (pretty name) (pretty newBody))
+                             prettyAbs (pretty name) (pretty newBody))
       Ref exp0 -> "ref" <+> (prettyAtom exp0)
       Asgn (lhs, rhs) -> (prettyAtom lhs) <+> ":=" <+> (pretty rhs)
       Deref ref -> "!" <> (prettyAtom ref)
     where
-      prettyAtom exp = case exp of
+      prettyAtom exp0 = case exp0 of
         Free(str) -> pretty str
-        Int _ -> pretty exp
-        Loc _ -> pretty exp
-        Star  -> pretty exp
-        _ -> parens $ pretty exp
+        Int _ -> pretty exp0
+        Loc _ -> pretty exp0
+        Star  -> pretty exp0
+        _ -> parens $ pretty exp0
      -- Given @(argStr, argTyp)@ (the argument) and @body@, the body to a lambda,
      -- @stripAbs@ returns a tuple where the first component is string "(argStr: argTyp)", the pretty-printed argument to the lambda
      -- The second component is expression @body[0 := Free(argStr)]@.
@@ -172,11 +175,11 @@ instance Pretty Exp where
       stripAbs (argStr, argTyp) body =
        -- START HERE removed some complexity from @stripAbs@, if there is a bug with nameclashes look here
         let newBody = subst 0 (Free argStr) body
-            arg =  parens $ (pretty argStr) <+> ":" <+> (pretty argTyp) in
+            arg = prettyTyping (Free argStr) argTyp in
           (arg, newBody)
      -- Given a string representing the arguments and a string representing body, pretty print the lambda abstraction
-      abs :: Doc ann -> Doc ann -> Doc ann
-      abs argsStr bodyStr = "\\" <>  argsStr <> "." <> bodyStr
+      prettyAbs :: Doc ann -> Doc ann -> Doc ann
+      prettyAbs argsStr bodyStr = "\\" <>  argsStr <> "." <> bodyStr
 
 instance Pretty Bop where
   pretty bop = case bop of
