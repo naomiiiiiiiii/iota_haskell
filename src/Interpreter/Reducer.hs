@@ -46,6 +46,13 @@ reduce expr = case expr of
       v1 <- reduce expr1
       v2 <- reduce expr2
       return $ semanticOp op v1 v2
+  Ap(fn, arg) ->
+    do
+      fnVal <- reduce fn
+      argVal <- reduce arg
+      case fnVal of
+        Lam(_, body) -> reduce (subst 0 argVal body)
+        _  -> return $ Ap (fnVal, argVal)
 
 -- Given an AST binop, return the @Exp -> Exp -> Exp@ function that does what the @Bop@ means
 semanticOp :: Bop -> Exp -> Exp -> Exp
