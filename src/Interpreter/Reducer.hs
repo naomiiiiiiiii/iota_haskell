@@ -53,6 +53,10 @@ reduce expr = case expr of
       case fnVal of
         Lam(_, body) -> reduce (subst 0 argVal body)
         _  -> return $ Ap (fnVal, argVal)
+  Bind(exp0, body) -> do
+    val0Suspended <- reduce exp0
+    val0 <- unsuspend val0Suspended -- release the computation in @exp0@
+    reduce (subst 0 val0 (snd body)) --  evaluate @body@ (with the bound variable replaced by @val0@)
   -- @unsuspend comp@ expects @comp@ to be a fully-reduced computation (ie, an expression with @ret@, @ref@, @:=@, or @!@ at the top). It releases and runs the suspended computation @comp@.
   where
     unsuspend :: AST.Exp -> StateT (M.IntMap AST.Exp) (Reader Env.Env) AST.Exp
