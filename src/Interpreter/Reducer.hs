@@ -53,6 +53,11 @@ reduce expr = case expr of
       case fnVal of
         Lam(_, body) -> reduce (subst 0 argVal body)
         _  -> return $ Ap (fnVal, argVal)
+  -- @unsuspend comp@ expects @comp@ to be a fully-reduced computation (ie, an expression with @ret@, @ref@, @:=@, or @!@ at the top). It releases and runs the suspended computation @comp@.
+  where
+    unsuspend :: AST.Exp -> StateT (M.IntMap AST.Exp) (Reader Env.Env) AST.Exp
+    unsuspend comp = case comp of
+     Ret exp0 -> reduce exp0
 
 -- Given an AST binop, return the @Exp -> Exp -> Exp@ function that does what the @Bop@ means
 semanticOp :: Bop -> Exp -> Exp -> Exp
