@@ -33,13 +33,13 @@ typeChecker expr = case expr of
     Binop(bop, exp1, exp2) -> do
       tau1 <- typeChecker exp1
       tau2 <- typeChecker exp2
-      let (bopArg1, bopArg2, bopRet) = bopTyp bop
+      let (bopArg1, bopArg2, bopRet) = bopTyp bop -- get the argument types that @bop@ expects
       case (bopArg1 == tau1, bopArg2 == tau2) of
-        (True, True) -> return bopRet
+        (True, True) -> return bopRet -- The provided arguments have the expected types
         (False, _) -> tcError ("expected " ++ (show bopArg1) ++
-                                  " , recieved " ++ (showTyping exp1 tau1))
+                                  " , recieved " ++ (showTyping exp1 tau1)) -- First arg is wrong
         (_, False)-> tcError ("expected " ++ (show bopArg2) ++
-                                  " , recieved " ++ (showTyping exp2 tau2))
+                                  " , recieved " ++ (showTyping exp2 tau2)) -- Second arg is wrong
     Lam ((_, tau0), body) -> local (Env.addLocalEnv tau0)
                              ((curry ArrowTyp) tau0 <$> typeChecker body)
     Ap(fn, arg) -> do
@@ -50,6 +50,7 @@ typeChecker expr = case expr of
         _ -> tcError ("cannot apply " ++ (show tauFn) ++ " to "
                       ++ (showTyping arg tauArgReal))
     Ret(exp0) -> CompTyp <$> typeChecker exp0
+    -- G |- exp0 : Comp A and G,A |- body : Comp B means G |- bind(exp0, body) : Comp B
     Bind(exp0, ( _, body)) -> do
       tauComp <- typeChecker exp0
       case tauComp of
@@ -61,12 +62,15 @@ typeChecker expr = case expr of
         _ -> tcError ("cannot bind " ++ (showTyping exp0 tauComp))
 
     Ref(exp0) -> CompTyp <$> RefTyp <$> typeChecker exp0  -- a reference is a delayed computation which, when run, stores @m0@ and then evaluates to a location
+    -- Assignments return nothing after modifying the store
+    -- G |- loc : Ref A and G |- rhs : A means G |- loc := rhs : Comp Unit
     Asgn(loc, rhs) -> do
        tauLoc <- typeChecker loc
        tauRHS <- typeChecker rhs
        case tauLoc of
          RefTyp tauContents | (tauContents == tauRHS) -> return $ CompTyp UnitTyp
          _ -> tcError ("cannot assign " ++ (showTyping rhs tauRHS) ++ " to ref of type " ++ (show tauLoc))
+    -- G |- loc : Ref A means G |- !loc : Comp A
     Deref loc -> do
       tauLoc <- typeChecker loc
       case tauLoc of
