@@ -25,9 +25,9 @@ interpret = do
   let (name, expr) = P.parseIota inStr
   (initStore, initEnv) <- get
   let expType = runReader (TC.typeChecker expr) initEnv
-  let (reducedExp, finalStore) = runState
-                                 (runReaderT (R.reduce expr) (Env.globalEnv initEnv))
-                                 initStore
+  let (reducedExp, finalStore) = runReader
+                                 (runStateT (R.reduce expr) initStore)
+                                 initEnv
   lift $ putStrLn $ show $ prettyStep name expType reducedExp finalStore
   -- update the state to the new store
   modify (\(_, env) -> (finalStore, env))
