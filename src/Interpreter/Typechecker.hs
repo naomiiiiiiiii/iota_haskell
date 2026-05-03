@@ -49,6 +49,16 @@ typeChecker expr = case expr of
         ArrowTyp(tauArg, tauOut) | (tauArg == tauArgReal) -> return tauOut
         _ -> tcError ("cannot apply " ++ (show tauFn) ++ " to "
                       ++ (showTyping arg tauArgReal))
+    Ret(exp0) -> CompTyp <$> typeChecker exp0
+    Bind(exp0, ( _, body)) -> do
+      tauComp <- typeChecker exp0
+      case tauComp of
+        CompTyp tauBound -> do
+          tauOut <- local (Env.addLocalEnv tauBound) (typeChecker body)
+          case tauOut of
+            CompTyp _ -> return tauOut
+            _ -> tcError ("expected bind to return a computation, instead got " ++ (showTyping body tauOut))
+        _ -> tcError ("cannot bind " ++ (showTyping exp0 tauComp))
   where
     -- Given a binop, @bopTyp@ returns (in order) the first argument type, the second argument type, and the return type
     bopTyp :: Bop -> (Typ, Typ, Typ)
