@@ -30,3 +30,20 @@ typeChecker expr = case expr of
     Int _ -> return IntTyp
     Loc i -> tcError ("uninitialized location: " ++ (show i))
     --raw locations should only show up during execution, not when a program is typechecked
+    Binop(bop, exp1, exp2) -> do
+      tau1 <- typeChecker exp1
+      tau2 <- typeChecker exp2
+      let (bopArg1, bopArg2, bopRet) = bopTyp bop
+      case (bopArg1 == tau1, bopArg2 == tau2) of
+        (True, True) -> return bopRet
+        (False, _) -> tcError ("expected " ++ (show bopArg1) ++
+                                  " , recieved " ++ (showTyping exp1 tau1))
+        (_, False)-> tcError ("expected " ++ (show bopArg2) ++
+                                  " , recieved " ++ (showTyping exp2 tau2))
+  where
+    -- Given a binop, @bopTyp@ returns (in order) the first argument type, the second argument type, and the return type
+    bopTyp :: Bop -> (Typ, Typ, Typ)
+    bopTyp bop = case bop of
+      Plus -> (IntTyp, IntTyp, IntTyp)
+    showTyping :: Exp -> Typ -> String
+    showTyping expr0 typ = show $ prettyTyping expr0 typ
