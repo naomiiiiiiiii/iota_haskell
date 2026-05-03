@@ -10,14 +10,14 @@ import qualified Interpreter.Reducer as R
 import qualified AST as AST
 
 import System.IO (hFlush, stdout)
-import Control.Monad.State
+import Control.Monad.State.Strict
 import Control.Monad.Reader
 import Prettyprinter
-import qualified Data.Map as M
+import qualified Data.IntMap as M
 
 -- Run a REPL that interprets a sequence of Iota let-bindings (provided through @stdin@). After each let-binding, the REPL prints the resulting evaluated value and memory store.
 -- The ambient state consists first of the global, mutable memory store (a map of locations to expressions) and second of the variable environment
-interpret :: StateT (M.Map Int AST.Exp, Env.Env) IO ()
+interpret :: StateT (M.IntMap AST.Exp, Env.Env) IO ()
 interpret = do
   lift $ putStr ">> "
   lift $ hFlush stdout
