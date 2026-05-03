@@ -1,7 +1,7 @@
 -- The AST for the Iota language and helper functions
 {-# LANGUAGE OverloadedStrings #-}
 
-module AST (Typ(..) , Exp(..), Bop(..), prettyTyping)
+module AST (Typ(..) , Exp(..), Bop(..), subst, absList, applyList, plus, bind, prettyTyping)
 where
 
 import Prettyprinter
