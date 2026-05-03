@@ -40,6 +40,15 @@ typeChecker expr = case expr of
                                   " , recieved " ++ (showTyping exp1 tau1))
         (_, False)-> tcError ("expected " ++ (show bopArg2) ++
                                   " , recieved " ++ (showTyping exp2 tau2))
+    Lam ((_, tau0), body) -> local (Env.addLocalEnv tau0)
+                             ((curry ArrowTyp) tau0 <$> typeChecker body)
+    Ap(fn, arg) -> do
+      tauFn <- typeChecker fn
+      tauArgReal <- typeChecker arg
+      case tauFn of
+        ArrowTyp(tauArg, tauOut) | (tauArg == tauArgReal) -> return tauOut
+        _ -> tcError ("cannot apply " ++ (show tauFn) ++ " to "
+                      ++ (showTyping arg tauArgReal))
   where
     -- Given a binop, @bopTyp@ returns (in order) the first argument type, the second argument type, and the return type
     bopTyp :: Bop -> (Typ, Typ, Typ)
