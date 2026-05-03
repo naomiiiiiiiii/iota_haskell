@@ -57,6 +57,7 @@ reduce expr = case expr of
     val0Suspended <- reduce exp0
     val0 <- unsuspend val0Suspended -- release the computation in @exp0@
     reduce (subst 0 val0 (snd body)) --  evaluate @body@ (with the bound variable replaced by @val0@)
+  Bound _ -> rError ("Cannot reduce bound variable: " ++ (show expr))
   -- @unsuspend comp@ expects @comp@ to be a fully-reduced computation (ie, an expression with @ret@, @ref@, @:=@, or @!@ at the top). It releases and runs the suspended computation @comp@.
   where
     unsuspend :: AST.Exp -> StateT (M.IntMap AST.Exp) (Reader Env.Env) AST.Exp
