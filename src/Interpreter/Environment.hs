@@ -1,11 +1,14 @@
 {-# LANGUAGE NamedFieldPuns#-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
 
 -- An environment of global and local Iota expression bindings, useful in typechecking and d expression reduction
 -- Also, the global mutable memory store, used in expression reduction
 module Interpreter.Environment (Env(..), Store(..)
                               , addGlobalEnv, addLocalEnv
                               , lookUpGlobalU, lookUpLocalU
-                              , emptyEnv)
+                              , emptyEnv
+                              , addToStore)
   where
 
 import qualified AST as AST
@@ -13,6 +16,7 @@ import qualified Data.Map as M
 import qualified Data.IntMap as IntM
 import Data.List ((!?))
 import Control.Monad.Reader
+import Control.Monad.State.Strict
 
 ------------
 --- Global and local environments
@@ -65,3 +69,18 @@ lookUpU lookUpFn fnName errorName key= do
 data Store = Store {storeMap :: IntM.IntMap AST.Exp -- map of locations to the expressions stored therein
                   , nextIndex :: Int -- next available location
                   }
+
+-- @addToStore v@ adds @v@ to the store at the next fresh index, then increments the store's @nextIndex@ field to the newly next fresh index
+-- @addToStore v s@ returns the newly used index (the old freshest index)
+addToStore :: Monad a => AST.Exp -> StateT Store a Int
+addToStore v =
+  do
+    store <- get
+    let errStr = "INTERNAL ERROR (Environment): expected fresh memory index"
+        index = nextIndex store
+        newMap = IntM.alter (maybe (Just v) (\_ -> error errStr)) index (storeMap store)
+    put (Store newMap (index + 1))
+    return index
+
+emptyStore :: Store
+emptyStore = Store IntM.empty 0
