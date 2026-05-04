@@ -8,7 +8,9 @@ module Interpreter.Environment (Env(..), Store(..)
                               , addGlobalEnv, addLocalEnv
                               , lookUpGlobalU, lookUpLocalU
                               , emptyEnv
-                              , addToStore)
+                              , addToStore
+                              , modifyStore
+                              , emptyStore)
   where
 
 import qualified AST as AST
@@ -81,6 +83,18 @@ addToStore v =
         newMap = IntM.alter (maybe (Just v) (\_ -> error errStr)) index (storeMap store)
     put (Store newMap (index + 1))
     return index
+
+-- @modifyStore i rhs@ updates the store to contain @rhs@ at index @i@
+-- @modifyStore@ will fail if @i@ is not already assigned a value in the store
+modifyStore :: Monad a => Int -> AST.Exp -> StateT Store a ()
+modifyStore i rhs =
+  do
+    let errStr = "Environment.modifyStore: assigning to uninitialized location: " ++ (show i)
+    modify (\s -> s{storeMap = IntM.alter
+                               (\case
+                                   Just _ -> Just rhs
+                                   Nothing -> error errStr)
+                               i (storeMap s)})
 
 emptyStore :: Store
 emptyStore = Store IntM.empty 0
