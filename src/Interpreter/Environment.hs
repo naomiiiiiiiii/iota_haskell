@@ -1,9 +1,8 @@
 {-# LANGUAGE NamedFieldPuns#-}
 
--- An environment of global and local Iota expression bindings, useful in
--- typechecking
-module Interpreter.Environment (Env(..)
-                              , newEnv
+-- An environment of global and local Iota expression bindings, useful in typechecking and d expression reduction
+-- Also, the global mutable memory store, used in expression reduction
+module Interpreter.Environment (Env(..), Store(..)
                               , addGlobalEnv, addLocalEnv
                               , lookUpGlobalU, lookUpLocalU
                               , emptyEnv)
@@ -11,6 +10,7 @@ module Interpreter.Environment (Env(..)
 
 import qualified AST as AST
 import qualified Data.Map as M
+import qualified Data.IntMap as IntM
 import Data.List ((!?))
 import Control.Monad.Reader
 
@@ -23,9 +23,6 @@ import Control.Monad.Reader
 data Env = Env { globalEnv :: M.Map String (AST.Typ, AST.Exp)
                , localEnv :: [AST.Typ]
                }
-
-newEnv :: (M.Map String (AST.Typ, AST.Exp)) -> Env
-newEnv globalEnv = Env {globalEnv, localEnv = []}
 
 addGlobalEnv :: String -> (AST.Typ, AST.Exp) -> Env -> Env
 addGlobalEnv key v env = env {globalEnv = M.insert key v (globalEnv env)}
@@ -60,3 +57,11 @@ lookUpU lookUpFn fnName errorName key= do
     Just out -> return out
     Nothing -> error ("Environment." ++ fnName ++ ": "
                       ++ "Unbound " ++ errorName ++ " " ++ (show key))
+
+------------
+--- Mutable memory store
+------------
+
+data Store = Store {storeMap :: IntM.IntMap AST.Exp -- map of locations to the expressions stored therein
+                  , nextIndex :: Int -- next available location
+                  }
