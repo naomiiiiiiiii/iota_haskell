@@ -13,11 +13,10 @@ import System.IO (hFlush, stdout)
 import Control.Monad.State.Strict
 import Control.Monad.Reader
 import Prettyprinter
-import qualified Data.IntMap as M
 
 -- Run a REPL that interprets a sequence of Iota let-bindings (provided through @stdin@). After each let-binding, the REPL prints the resulting evaluated value and memory store.
 -- The ambient state consists first of the global, mutable memory store (a map of locations to expressions) and second of the variable environment
-interpret :: StateT (M.IntMap AST.Exp, Env.Env) IO ()
+interpret :: StateT (Env.Store, Env.Env) IO ()
 interpret = do
   lift $ putStr ">> "
   lift $ hFlush stdout
@@ -36,7 +35,7 @@ interpret = do
   interpret
   where
     -- print the evaluation of a let-binding
-    prettyStep :: String -> AST.Typ -> AST.Exp -> M.IntMap AST.Exp -> Doc ann
+    prettyStep :: String -> AST.Typ -> AST.Exp -> Env.Store -> Doc ann
     prettyStep name tau v finalStore =
       -- TODO: print tau as an atom
       (pretty name) <> ":" <> (pretty tau) <+> "=>*" <+> (pretty v) <\>
