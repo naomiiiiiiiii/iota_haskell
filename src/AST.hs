@@ -70,12 +70,15 @@ mapExpWDepth variableCase = mapExpWDepthHelp variableCase 0
 -- For variable index i >= 0, @abstract i var exp@ will turn all free occurences of variable @var@ in @exp@ into occurences of the bound variable indexed by @i@
 -- This function is useful when constructing a lambda abstraction. The lambda body starts out with only free variables. But, as each binder is added over the body expression, the corresponding free variable in the body is captured by the binder and converted to a bound variable
 abstract :: Int -> String -> Exp -> Exp
-abstract i boundVarStr = let varCase = \j -> ( let freeVarHandler = \varStr ->
-                                                               if (varStr == boundVarStr)
-                                                               then (Bound j)
-                                                               else (Free varStr) -- Free variables not named @boundVarStr@ are left alone
-                                                in (freeVarHandler, Bound))
-                         in mapExpWDepth varCase i
+abstract i boundVarStr =
+  let varCase = \depth ->
+        (let freeVarHandler = \varStr ->
+                                if (varStr == boundVarStr)
+                                then (Bound (i + depth))
+                                else (Free varStr)
+                                -- Free variables not named @boundVarStr@ are left alone
+                               in (freeVarHandler, Bound))
+  in mapExpWDepth varCase
 
 -- @shift i threshold exp@ shifts @exp@'s bound variables up by @i@, while ignoring variables <= @dot@*)
 shift :: Int -> Int -> Exp -> Exp
@@ -85,7 +88,7 @@ shift i threshold =
                               then Bound(j+i)
                               else Bound j
         in (Free, boundCase))
-  in mapExpWDepth varCase 0
+  in mapExpWDepth varCase
 
 -- For variable index @i@, @subst i v expr@ equals expr[Bound i := v], which is to say
 -- @expr@ with all occurences of variable @Bound i@ replaced by @v@
@@ -100,7 +103,7 @@ subst i v =
                           EQ -> shift varDepth 0 v -- @j@ is the desired variable, so we need to substitute. We shift @v@ up @varDepth@ to avoid @v@ capturing any local variables
                           GT -> Bound(j-1) -- @(i + varDepth)@ has been removed, so @j@ moves leftwards in the lambda stack
                   in (Free, boundCase ))
-  in mapExpWDepth varCase 0
+  in mapExpWDepth varCase
 
 ------------
 --- Functions for constructing ASTs
