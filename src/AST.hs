@@ -41,25 +41,28 @@ data Bop = Plus
 -- @mapi@ maps a function over each element of the argument list to get a new list. That function takes an element of the list, of course, but it also takes that element's index.
 -- In a similar way, @mapExpWDepth@ applies a function to each variable in the argument expression. That function has two components -- one component takes a string argument to handle free variables, the other component takes an integer argument to handle bound variables. Both function components take a second argument: the variable's depth. In the context of an expression, a variable's depth is how many binders deep that variable is. For instance, the variable @x@ in expression @x + 5@ is 0 binders deep. But the expression @x@ in @\(y x).x@ is two binders deep.
 -- Variable depth in @mapExpWDepth@ is analagous to element index in @mapi@.
--- So @mapExpWDepth varCase startingIndex exp@ applies the appropriate function in @varCase@ to all the variables in @exp@. -- START HERE refactor to remove @start@, unnecessarily complicated.
-mapExpWDepth :: (Int -> (String -> Exp, Int -> Exp)) -> Int -> Exp -> Exp
-mapExpWDepth varCase start expr =
-    let mapExpWDepthHelp = mapExpWDepth varCase
-        varCases = varCase start in
-    case expr of
-    Free str -> (fst varCases) str
-    Bound i -> (snd varCases) i
-    Star -> expr
-    Int _ -> expr
-    Loc _ -> expr
-    Binop (op, exp1, exp2) -> Binop (op, mapExpWDepthHelp start exp1, mapExpWDepthHelp start exp2)
-    Lam (arg, body) -> Lam(arg, (mapExpWDepthHelp (start + 1)) body)
-    Ap(exp1, exp2) -> Ap((mapExpWDepthHelp start exp1), (mapExpWDepthHelp start exp2))
-    Ret(exp0) -> Ret(mapExpWDepthHelp start exp0)
-    Bind(exp1, (s, exp2)) -> Bind((mapExpWDepthHelp start exp1), (s, (mapExpWDepthHelp (start + 1) exp2)))
-    Ref(exp0) -> Ref(mapExpWDepthHelp start exp0)
-    Asgn(ref, exp0) -> Asgn((mapExpWDepthHelp start ref), (mapExpWDepthHelp start exp0))
-    Deref ref -> Deref(mapExpWDepthHelp start ref)
+-- So @mapExpWDepth varCase exp@ applies the appropriate function in @varCase@ to all the variables in @exp@ (with their depth).
+mapExpWDepth :: (Int -> (String -> Exp, Int -> Exp)) -> Exp -> Exp
+mapExpWDepth variableCase = mapExpWDepthHelp variableCase 0
+  where
+  mapExpWDepthHelp :: (Int -> (String -> Exp, Int -> Exp)) -> Int -> Exp -> Exp
+  mapExpWDepthHelp varCase depth expr =
+    let mapExpWDepthH = mapExpWDepthHelp varCase
+        varCases = varCase depth in
+      case expr of
+        Free str -> (fst varCases) str
+        Bound i -> (snd varCases) i
+        Star -> expr
+        Int _ -> expr
+        Loc _ -> expr
+        Binop (op, exp1, exp2) -> Binop (op, mapExpWDepthH depth exp1, mapExpWDepthH depth exp2)
+        Lam (arg, body) -> Lam(arg, (mapExpWDepthH (depth + 1)) body)
+        Ap(exp1, exp2) -> Ap((mapExpWDepthH depth exp1), (mapExpWDepthH depth exp2))
+        Ret(exp0) -> Ret(mapExpWDepthH depth exp0)
+        Bind(exp1, (s, exp2)) -> Bind((mapExpWDepthH depth exp1), (s, (mapExpWDepthH (depth + 1) exp2)))
+        Ref(exp0) -> Ref(mapExpWDepthH depth exp0)
+        Asgn(ref, exp0) -> Asgn((mapExpWDepthH depth ref), (mapExpWDepthH depth exp0))
+        Deref ref -> Deref(mapExpWDepthH depth ref)
 
 ------------
 --- Functions for manipulating AST variables
