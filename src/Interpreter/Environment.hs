@@ -19,6 +19,7 @@ import qualified Data.IntMap as IntM
 import Data.List ((!?))
 import Control.Monad.Reader
 import Control.Monad.State.Strict
+import Prettyprinter
 
 ------------
 --- Global and local environments
@@ -98,3 +99,12 @@ modifyStore i rhs =
 
 emptyStore :: Store
 emptyStore = Store IntM.empty 0
+
+------------
+--- Pretty printing for the store
+------------
+instance Pretty Store where
+  pretty store = braces $ concatWith (\x y -> x <> "," <+> y)
+                 (map (\(k, v) -> parens $ ("Loc:" <+> (pretty k) <> "," <+>
+                                          "Contents:" <+> (pretty v)))
+                   (IntM.assocs $ storeMap store))
