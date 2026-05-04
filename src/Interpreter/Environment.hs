@@ -62,6 +62,7 @@ lookUpU lookUpFn fnName errorName key= do
   outMaybe <- lookUpFn key
   case outMaybe of
     Just out -> return out
+    -- TODO: make eError function that appends "Environment." to all error messages
     Nothing -> error ("Environment." ++ fnName ++ ": "
                       ++ "Unbound " ++ errorName ++ " " ++ (show key))
 
