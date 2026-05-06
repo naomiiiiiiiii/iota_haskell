@@ -1,7 +1,7 @@
 -- Toplevel interpretation function for iota
 {-# LANGUAGE OverloadedStrings #-}
 
-module Interpreter.Interpreter (interpret)
+module Interpreter.Interpreter (interpret, interpretBindings)
   where
 import qualified Parser.IotaParser as P
 import qualified Interpreter.Environment as Env
@@ -53,4 +53,8 @@ interpret = do
     (<\>) s1 s2 = s1 <> "\n" <> s2
 
 
+-- Interpret a list of let-bindings in order
+-- Returns the value and type of each bound variable, in order
+interpretBindings :: [(String, AST.Exp)] -> [(AST.Exp, AST.Typ)]
+interpretBindings bindings = fst $ runState (mapM interpretBinding bindings) (Env.emptyStore, Env.emptyEnv)
 
