@@ -38,16 +38,10 @@ interpret = do
   lift $ hFlush stdout
   inStr <- lift $ getLine
   let (name, expr) = P.parseIota inStr
-  (initStore, initEnv) <- get
-  let expType = runReader (TC.typeChecker expr) initEnv
-  let (reducedExp, finalStore) = runReader
-                                 (runStateT (R.reduce expr) initStore)
-                                 initEnv
+  -- Interpret the binding (let @name@ = @exp@) and update the state
+  (reducedExp, expType) <- mapStateT (return . runIdentity) (interpretBinding (name, expr))
+  finalStore <- fst <$> get
   lift $ putStrLn $ show $ prettyStep name expType reducedExp finalStore
-  -- update the state to the new store
-  modify (\(_, env) -> (finalStore, env))
- -- update the state to the new environment
-  modify (\(store, oldEnv) -> (store, Env.addGlobalEnv name (expType, reducedExp) oldEnv))
   interpret
   where
     -- print the evaluation of a let-binding
