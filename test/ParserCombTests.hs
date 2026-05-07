@@ -8,12 +8,14 @@ import Lexer.Lexer as Lex (Token(..))
 import Test.Tasty (testGroup, TestTree)
 import Test.Tasty.HUnit(testCase, assertEqual, assertBool)
 import Data.Either (isLeft)
+import Data.Char (toUpper)
+import Data.List (singleton)
 import Control.Exception (try, evaluate, ErrorCall)
 import qualified Control.DeepSeq as DeepSeq (force)
 
 -- Each of these tests is a small example focussed on the functionality of one parsing combinator
 tests :: TestTree
-tests = testGroup "Parsing Combinator tests" [ident, key, intP, unitP, orP, force, circ, keyCircR, keyCircL]
+tests = testGroup "Parsing Combinator tests" [ident, key, intP, unitP, orP, force, circ, keyCircR, keyCircL, pipe, repeatP]
 
 -- TODO should check that all these combinators fail when expected as well
 ident :: TestTree
@@ -77,6 +79,18 @@ keyCircL = testCase "@keyCircL@ parsing combinator" $
   assertEqual "Succeeds when expected"
   (Right ((), [Key ")"]))
   (PC.keyCircL ")" PC.unitP [Key "(", Key ")", Key ")", Key ")"])
+
+pipe :: TestTree
+pipe = testCase "@(>>>)@ parsing combinator" $
+  assertEqual "Succeeds when expected"
+  (Right ("HELLO", [Id "world"]))
+  (PC.ident PC.>>> (map toUpper) $ [Id "hello", Id "world"])
+
+repeatP :: TestTree
+repeatP = testCase "@repeatP@ parsing combinator" $ do
+  assertEqual "Repeats many times"
+    (Right (map singleton "hello world", [Key "*"]))
+    (PC.repeatP PC.ident $ (map (Id . singleton) "hello world") ++ [Key "*"]) -- the second argument to @repeatP@ is a list of identifiers (where each identifier is a single-character string) followed by @Key "*"@. Together, all the identifiers spell "hello world"
 
 -- Parser that always fails
 failParse :: [Lex.Token] -> Either PC.SyntaxError (String, [Lex.Token])
