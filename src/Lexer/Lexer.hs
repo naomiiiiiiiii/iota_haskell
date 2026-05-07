@@ -1,9 +1,12 @@
 {-# LANGUAGE NamedFieldPuns#-}
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 
 -- A generic lexer implemented as described in *ML for the Working Programmer*/ (@scan@)
 module Lexer.Lexer (Keywords, Token(..), iotaKeywords, scan)
 where
 
+import GHC.Generics (Generic)
+import Control.DeepSeq (NFData) -- forces eager evaluation (for testing)
 import Data.Char (isAlpha, isAlphaNum, isDigit, isPunctuation, isSymbol, isPrint, isSpace)
 import Data.List (uncons)
 import Text.Read (readMaybe)
@@ -45,7 +48,7 @@ iotaKeywords = Keywords {alphaNumeric, symbols, commentL, commentR}
 data Token = Id String -- Identifiers
            | Key String -- Keywords
            | Int Int -- Numbers
-  deriving(Show, Eq)
+  deriving(Show, Eq, Generic, NFData)
 
 -- @alphaTok@ takes a @Keywords@ value describing the keywords of the lexed language
 -- and a @String@ of alphanumeric characters

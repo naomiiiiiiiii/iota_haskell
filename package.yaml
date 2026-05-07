@@ -24,6 +24,7 @@ dependencies:
 - mtl
 - containers
 - prettyprinter
+- deepseq
 
 ghc-options:
 - -Wall
@@ -62,3 +63,4 @@ tests:
     - iotaHaskell
     - tasty
     - tasty-hunit
+    - deepseq

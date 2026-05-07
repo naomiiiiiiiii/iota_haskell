@@ -1,10 +1,13 @@
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 --Some generic parsing combinators as described in *ML for the Working Programmer*/
 -- If a parsing combinator @p@ is built to parse @Lex.Token@s into values of type @A@, @p:: [Lex.Token] -> Either SyntaxError (A, [Lex.Token])@. If the parsing combinator fails to parse an @a@, it will produce a syntax error. If it succeeds, it will produce a tuple. The first value in the tuple is the result of the parsing. The second value is the remaining, yet unparsed Lex.Tokens.
 
 module Parser.ParsingCombinators (SyntaxError(..), ident, key, intP, unitP, epsilon, (|:|), force, circ, keyCircR, keyCircL, (>>>), repeatP, parse)
   where
 
+import GHC.Generics (Generic)
 import qualified Lexer.Lexer as Lex
+import Control.DeepSeq (NFData) -- forces eager evaluation (for testing)
 
 ------------
 --- Error handling
@@ -14,7 +17,7 @@ import qualified Lexer.Lexer as Lex
 -- An error can be caught and handled by the caller parser unless it is forced with "forceError"
 -- If the error is not caught, it will get to the toplevel parsing function (@parse@) and the parser will error out.
 data SyntaxError = SyntaxError String
-  deriving(Show, Eq)
+  deriving(Show, Eq, Generic, NFData)
 
 -- throw an error, making it clear that it comes from the ParsingCombinators file
 pcError :: String -> a

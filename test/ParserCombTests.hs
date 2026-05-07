@@ -1,16 +1,19 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module ParserCombTests (tests) where
 
 import qualified Parser.ParsingCombinators as PC
-import Lexer.Lexer (Token(..))
+import Lexer.Lexer as Lex (Token(..))
 
 import Test.Tasty (testGroup, TestTree)
 import Test.Tasty.HUnit(testCase, assertEqual, assertBool)
 import Data.Either (isLeft)
+import Control.Exception (try, evaluate, ErrorCall)
+import qualified Control.DeepSeq as DeepSeq (force)
 
 -- Each of these tests is a small example focussed on the functionality of one parsing combinator
 tests :: TestTree
-tests = testGroup "Parsing Combinator tests" [ident, key, intP, unitP, orP]
+tests = testGroup "Parsing Combinator tests" [ident, key, intP, unitP, orP, force]
 
 -- TODO should check that all these combinators fail when expected as well
 ident :: TestTree
@@ -49,4 +52,14 @@ orP = testCase "@|:|@ parsing combinator" $ do
     parseIntoRhs = \case
       _:xs -> Right ("rhs", xs)
       [] -> Left $ PC.SyntaxError "parseIntoRhs"
-    failParse = \_ -> Left $ PC.SyntaxError "failParse"
+
+force :: TestTree
+force = testCase "@force@ parsing combinator" $ do
+  out :: Either ErrorCall (Either PC.SyntaxError (String, [Token])) <-
+    try $ evaluate $ DeepSeq.force $
+    ((Right . (PC.force failParse)) PC.|:| PC.ident) [Id "start", Id "end"]
+  assertBool "Failure propagates through" (isLeft out)
+
+-- Parser that always fails
+failParse :: [Lex.Token] -> Either PC.SyntaxError (String, [Lex.Token])
+failParse = \_ -> Left $ PC.SyntaxError "failParse"
