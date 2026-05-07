@@ -21,6 +21,9 @@ makeLargeTest exName = do
   let exStrings = examples M.! exName
       exBindings :: [(String, AST.Exp)]= map parseIota exStrings
   assertEqual "Checking results of lexing and parsing" exBindings (parsingResults M.! exName)
+  let (exVals, exTypes) = unzip $ Interp.interpretBindings exBindings
+  assertEqual "Checking results of typechecking" exTypes (typingResults M.! exName)
+  assertEqual "Checking results of reduction" exVals (reduceResults M.! exName)
 
 -- @examples@ contains all the large examples we test on, organized by name
 -- Each example is represented as a string list, one string for each let-binding
@@ -31,3 +34,11 @@ examples = M.fromList [("Int reference", ["let test = bind(ret(5), \\n.bind(ref(
 -- The example consists of a list of let-bindings. Each let-binding in the example is parsed to get the LHS of the binding (a string name) and the RHS of the binding (an expression).
 parsingResults :: M.Map String [(String, AST.Exp)]
 parsingResults = M.fromList [("Int reference", [("test", Bind (Ret (Int 5),("n",Bind (Ref (Int 0),("r",Bind (Asgn (Bound 0,Bound 1),("u",Bind (Deref (Bound 1),("m",Ret (Bound 0))))))))))])]
+
+-- @typingResults@ contains the expected results of typing the large examples we test on, organized by name. There is one type for each let-binding in the large example.
+typingResults :: M.Map String [AST.Typ]
+typingResults = M.fromList [("Int reference", [CompTyp IntTyp])]
+
+-- @reduceResults@ contains the expected results of reducing the large examples we test on, organized by name. There is one value for each let-binding in the large example.
+reduceResults :: M.Map String [AST.Exp]
+reduceResults = M.fromList [("Int reference", [Ret (Int 5)])]
