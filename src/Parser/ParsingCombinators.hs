@@ -14,6 +14,7 @@ import qualified Lexer.Lexer as Lex
 -- An error can be caught and handled by the caller parser unless it is forced with "forceError"
 -- If the error is not caught, it will get to the toplevel parsing function (@parse@) and the parser will error out.
 data SyntaxError = SyntaxError String
+  deriving(Show, Eq)
 
 -- throw an error, making it clear that it comes from the ParsingCombinators file
 pcError :: String -> a
