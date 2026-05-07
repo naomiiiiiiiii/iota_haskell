@@ -13,7 +13,7 @@ import qualified Control.DeepSeq as DeepSeq (force)
 
 -- Each of these tests is a small example focussed on the functionality of one parsing combinator
 tests :: TestTree
-tests = testGroup "Parsing Combinator tests" [ident, key, intP, unitP, orP, force]
+tests = testGroup "Parsing Combinator tests" [ident, key, intP, unitP, orP, force, circ]
 
 -- TODO should check that all these combinators fail when expected as well
 ident :: TestTree
@@ -59,6 +59,12 @@ force = testCase "@force@ parsing combinator" $ do
     try $ evaluate $ DeepSeq.force $
     ((Right . (PC.force failParse)) PC.|:| PC.ident) [Id "start", Id "end"]
   assertBool "Failure propagates through" (isLeft out)
+
+circ :: TestTree
+circ = testCase "@circ@ parsing combinator" $
+  assertEqual "Succeeds when expected"
+  (Right (("start", "\\"), [Key "\\"]))
+  (PC.circ (PC.key "\\") PC.ident $ [Id "start", Key "\\", Key "\\"])
 
 -- Parser that always fails
 failParse :: [Lex.Token] -> Either PC.SyntaxError (String, [Lex.Token])
