@@ -91,6 +91,9 @@ repeatP = testCase "@repeatP@ parsing combinator" $ do
   assertEqual "Repeats many times"
     (Right (map singleton "hello world", [Key "*"]))
     (PC.repeatP PC.ident $ (map (Id . singleton) "hello world") ++ [Key "*"]) -- the second argument to @repeatP@ is a list of identifiers (where each identifier is a single-character string) followed by @Key "*"@. Together, all the identifiers spell "hello world"
+  assertEqual "Succeeds when argument parser cannot match"
+    (Right ([], [Key "*"]))
+    (PC.repeatP PC.ident [Key "*"])
 
 -- Parser that always fails
 failParse :: [Lex.Token] -> Either PC.SyntaxError (String, [Lex.Token])
