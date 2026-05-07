@@ -16,6 +16,7 @@ tests :: TestTree
 tests = testGroup "Large, full-pipeline tests"
         (map (\exName -> testCase (exName ++ ": parse, typecheck, and reduce") (makeLargeTest exName)) (M.keys examples))
 
+-- TODO: This should check the memory trace as well
 makeLargeTest :: String -> Assertion
 makeLargeTest exName = do
   let exStrings = examples M.! exName
