@@ -1,4 +1,4 @@
-
+{-# LANGUAGE LambdaCase #-}
 module ParserCombTests (tests) where
 
 import qualified Parser.ParsingCombinators as PC
@@ -10,7 +10,7 @@ import Data.Either (isLeft)
 
 -- Each of these tests is a small example focussed on the functionality of one parsing combinator
 tests :: TestTree
-tests = testGroup "Parsing Combinator tests" [ident, key, intP]
+tests = testGroup "Parsing Combinator tests" [ident, key, intP, unitP, orP]
 
 -- TODO should check that all these combinators fail when expected as well
 ident :: TestTree
@@ -26,3 +26,27 @@ key = testCase "@key@ parsing combinator" $
 intP :: TestTree
 intP = testCase "@intP@ parsing combinator" $
   assertEqual "Succeeds when expected" (Right (-42, [Int 1])) (PC.intP [Int (-42), Int 1])
+
+unitP :: TestTree
+unitP = testCase "@unitP@ parsing combinator" $
+  assertEqual "Succeeds when expected" (Right ((), [Key "(", Key ")"])) (PC.unitP [Key "(", Key ")", Key "(", Key ")"])
+
+orP :: TestTree
+orP = testCase "@|:|@ parsing combinator" $ do
+  (assertEqual
+    "Chooses LHS when possible"
+    (Right ("lhs", [Id "end"]))
+    (parseIntoLhs PC.|:| parseIntoRhs $ [Id "start", Id "end"]))
+  (assertEqual
+    "Chooses RHS otherwise"
+    (Right ("rhs", [Id "end"]))
+
+    (failParse PC.|:| parseIntoRhs $ [Id "start", Id "end"]))
+  where
+    parseIntoLhs = \case
+      _:xs -> Right ("lhs", xs)
+      [] -> Left $ PC.SyntaxError "parseIntoLhs"
+    parseIntoRhs = \case
+      _:xs -> Right ("rhs", xs)
+      [] -> Left $ PC.SyntaxError "parseIntoRhs"
+    failParse = \_ -> Left $ PC.SyntaxError "failParse"

@@ -1,7 +1,7 @@
 --Some generic parsing combinators as described in *ML for the Working Programmer*/
 -- If a parsing combinator @p@ is built to parse @Lex.Token@s into values of type @A@, @p:: [Lex.Token] -> Either SyntaxError (A, [Lex.Token])@. If the parsing combinator fails to parse an @a@, it will produce a syntax error. If it succeeds, it will produce a tuple. The first value in the tuple is the result of the parsing. The second value is the remaining, yet unparsed Lex.Tokens.
 
-module Parser.ParsingCombinators (SyntaxError, ident, key, intP, unitP, epsilon, (|:|), force, circ, keyCircR, keyCircL, (>>>), repeatP, parse)
+module Parser.ParsingCombinators (SyntaxError(..), ident, key, intP, unitP, epsilon, (|:|), force, circ, keyCircR, keyCircL, (>>>), repeatP, parse)
   where
 
 import qualified Lexer.Lexer as Lex
