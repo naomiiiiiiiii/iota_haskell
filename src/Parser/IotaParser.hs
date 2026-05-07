@@ -67,6 +67,7 @@ expr =
                |:| (keyCircL ")" (keyCircR expr "("))
 
 -- Parse a let-binding of the shape "[Name] = [Expr]"
+-- The parsed result has type @(String, AST.Exp)@. The string is the bound name (LHS of the binding) and the expression is the RHS of the binding
 iotaParser :: ([Lex.Token] -> Either SyntaxError ((String, AST.Exp), [Lex.Token]))
 iotaParser = circ expr (keyCircL "=" (keyCircR ident "let"))
 
