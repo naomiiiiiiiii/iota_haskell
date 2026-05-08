@@ -20,7 +20,7 @@ data Exp = Free String
          | Int Int
          | Loc Int -- location into the store. This is an internal expression, not accessible to the user.
          | Binop (Bop, Exp, Exp)
-         | Lam ((String, Typ),  Exp) -- lambdas are written "\(x : Int).x", for example
+         | Lam ((String, Typ),  Exp) -- lambdas are written "\(x : Int).x", for example. De Bruijn indices decrease from left to right. For example, \x y. x is \ 1 0 . 1
          | Ap (Exp, Exp) -- function application is written "f x y" or "f(x y)"
          | Ret Exp -- return into the state monad, written "ret [Exp]"
          | Bind (Exp, (String, Exp)) -- bind operation for the state monad, written "bind([Exp], \[Name].[Exp])"
@@ -80,7 +80,7 @@ abstract i boundVarStr =
                                in (freeVarHandler, Bound))
   in mapExpWDepth varCase
 
--- @shift i threshold exp@ shifts @exp@'s bound variables up by @i@, while ignoring variables <= @dot@*)
+-- @shift i threshold exp@ shifts @exp@'s bound variables up by @i@, while ignoring variables < @threshold@*)
 shift :: Int -> Int -> Exp -> Exp
 shift i threshold =
   let varCase = \varDepth -> (
@@ -92,12 +92,11 @@ shift i threshold =
 
 -- For variable index @i@, @subst i v expr@ equals expr[Bound i := v], which is to say
 -- @expr@ with all occurences of variable @Bound i@ replaced by @v@
--- START HERE refactored this so if there's a bug look here
 subst :: Int -> Exp -> Exp -> Exp
 subst i v =
   let varCase = \varDepth -> (
                   let boundCase = \j ->
-                        -- Why compare @j@ to the desired variable @i@ plus the variable depth? When going under a lambda, all the variable indexes shift up, including @i@. For example, (Bound 0 + \x.Bound 1)[0:= Int 5] would be (5 + \x. 5)
+                        -- Why compare @j@ to the desired variable @i@ plus the variable depth? When going under a lambda, all the variable indexes shift up, including @i@. This means that @i@ refers to the same semantic variable throughout the traversal. For example, (Bound 0 + \x.Bound 1)[0:= Int 5] would be (5 + \x. 5)
                         case (compare j (i + varDepth)) of
                           LT ->  Bound j -- @j@ is unaffected by the substitution
                           EQ -> shift varDepth 0 v -- @j@ is the desired variable, so we need to substitute. We shift @v@ up @varDepth@ to avoid @v@ capturing any local variables
